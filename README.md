@@ -1,16 +1,16 @@
 `planif` is a builder pattern wrapper around the windows task scheduler API ([windows-rs](https://github.com/microsoft/windows-rs)).
 ## TODO
 ### Triggers
-[] Boot
-[x] Daily
-[] Event
-[] Idle
-[] Logon
-[] MonthlyDOW
-[] Monthly
-[] Registration
-[] Time
-[] Weekly
+- [ ] Boot 
+- [x] Daily 
+- [ ] Event 
+- [ ] Idle 
+- [ ] Logon 
+- [ ] MonthlyDOW 
+- [ ] Monthly 
+- [ ] Registration 
+- [ ] Time 
+- [ ] Weekly 
 
 ## A builder library for the Windows Task Scheduler.
 
