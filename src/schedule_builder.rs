@@ -397,6 +397,7 @@ impl ScheduleBuilder<Time> {
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
     /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element
     pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {

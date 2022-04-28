@@ -1,5 +1,6 @@
 use chrono::prelude::*;
-use planif::schedule::{Action, ScheduleBuilder, TaskCreationFlags};
+use planif::schedule::TaskCreationFlags;
+use planif::schedule_builder::{Action, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sb = ScheduleBuilder::new().unwrap();
