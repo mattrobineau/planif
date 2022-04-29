@@ -1,16 +1,16 @@
 use planif::schedule::TaskCreationFlags;
 use planif::schedule_builder::{Action, ScheduleBuilder};
+use windows::Win32::Foundation::BSTR;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sb = ScheduleBuilder::new().unwrap();
-    sb.create_time()
+    sb.create_logon()
         .author("Matt")?
         .description("Test Time Trigger")?
         .trigger("test_time_trigger", 1)?
         .action(Action::new("test_time_action", "notepad.exe", "", ""))?
         .start_boundary("2022-04-28T02:14:08.660633427+00:00")?
-        // RandomDelay of 2 seconds
-        .random_delay("PT2S")?
+        .user_id("")?
         .build()?
         .register("TimeTaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
     Ok(())

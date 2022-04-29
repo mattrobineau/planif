@@ -101,6 +101,13 @@ impl ScheduleBuilder<Base> {
         }
     }
 
+    pub fn create_logon(self) -> ScheduleBuilder<Logon> {
+        ScheduleBuilder::<Logon> {
+            frequency: std::marker::PhantomData::<Logon>,
+            schedule: self.schedule,
+        }
+    }
+
     pub fn create_time(mut self) -> ScheduleBuilder<Time> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Time> {
@@ -318,6 +325,7 @@ impl ScheduleBuilder<Daily> {
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
     /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element
     pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
@@ -337,6 +345,7 @@ impl ScheduleBuilder<Daily> {
 }
 
 impl ScheduleBuilder<Logon> {
+    /// Create a logon trigger.
     pub fn trigger(mut self, id: &str, enabled: i16) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_LOGON)?;
@@ -349,6 +358,9 @@ impl ScheduleBuilder<Logon> {
         Ok(self)
     }
 
+    /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
+    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/logontrigger-delay
     pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
@@ -366,6 +378,12 @@ impl ScheduleBuilder<Logon> {
         }
     }
 
+    /// The identifier of the user. For example, "MyDomain\MyName" or for a local account, "Administrator".
+    /// _required_
+    /// This property can be in one of the following formats:
+    ///  - User name or SID: The task is started when the user logs on to the computer.
+    ///  - NULL: The task is started when any user logs on to the computer.
+    ///  see https://docs.microsoft.com/en-us/windows/win32/taskschd/logontrigger-userid
     pub fn user_id(self, id: &str) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
