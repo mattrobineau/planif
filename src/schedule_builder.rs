@@ -108,6 +108,13 @@ impl ScheduleBuilder<Base> {
             schedule: self.schedule,
         }
     }
+
+    pub fn create_weekly(self) -> ScheduleBuilder<Weekly> {
+        ScheduleBuilder::<Weekly> {
+            frequency: std::marker::PhantomData::<Weekly>,
+            schedule: self.schedule,
+        }
+    }
 }
 
 impl<Frequency> ScheduleBuilder<Frequency> {
@@ -429,6 +436,17 @@ impl ScheduleBuilder<Weekly> {
         Ok(self)
     }
 
+    /// Specifies the day(s) of the week to run the command.
+    /// days is a bitwise mask that indicated the days of the week on which the task runs.
+    /// |Weekday|Hex Value|Decimal Value|
+    /// |---|---|
+    /// |Sunday|0x01|1|
+    /// |Monday|0x02|2|
+    /// |Tuesday|0x04|4|
+    /// |Wednesday|0x08|8|
+    /// |Thursday|0x10|16|
+    /// |Friday|0x20|32|
+    /// |Saturday|0x40|64|
     pub fn days_of_week(self, days: i16) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
@@ -446,6 +464,8 @@ impl ScheduleBuilder<Weekly> {
         }
     }
 
+    /// Sets the interval between the weeks in the schedule.
+    /// For example settings to 1 runs every week; setting to 2 runs every other week.
     pub fn weeks_interval(self, weeks: i16) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
@@ -463,6 +483,9 @@ impl ScheduleBuilder<Weekly> {
         }
     }
 
+    /// Specifies the delay time that is randomly added to the start time of the trigger.
+    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element
     pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
