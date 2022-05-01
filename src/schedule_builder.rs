@@ -263,6 +263,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
 }
 
 impl ScheduleBuilder<Boot> {
+    /// Create a task that is started when the operating system is booted,
+    /// and boot trigger tasks are set to start when the Task Scheduler service starts.
+    /// Only a member of the Administrators group can create a task with a boot trigger.
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/boottrigger
     pub fn trigger(mut self, id: &str, enabled: i16) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_BOOT)?;
@@ -276,6 +280,9 @@ impl ScheduleBuilder<Boot> {
         Ok(self)
     }
 
+    /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
+    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/logontrigger-delay
     pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
@@ -306,6 +313,8 @@ impl ScheduleBuilder<Daily> {
         Ok(self)
     }
 
+    /// Sets the interval for days.
+    /// ie: An interval of 1 produces a daily schedule. An interval of 2 produces an every-other day schedule. Etc.
     pub fn days_interval(self, days: i16) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
