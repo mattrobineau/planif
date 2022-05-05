@@ -101,6 +101,14 @@ impl ScheduleBuilder<Base> {
         }
     }
 
+    /// Creates a builder for a logon trigger.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_logon();
+    /// ```
     pub fn create_logon(self) -> ScheduleBuilder<Logon> {
         ScheduleBuilder::<Logon> {
             frequency: std::marker::PhantomData::<Logon>,
@@ -108,6 +116,14 @@ impl ScheduleBuilder<Base> {
         }
     }
 
+    /// Creates a builder for a time trigger.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_time();
+    /// ```
     pub fn create_time(mut self) -> ScheduleBuilder<Time> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Time> {
@@ -116,6 +132,14 @@ impl ScheduleBuilder<Base> {
         }
     }
 
+    /// Creates a builder for a weekly trigger.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_weekly();
+    /// ```
     pub fn create_weekly(self) -> ScheduleBuilder<Weekly> {
         ScheduleBuilder::<Weekly> {
             frequency: std::marker::PhantomData::<Weekly>,
@@ -157,8 +181,8 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         Ok(self)
     }
 
+    /// Returns the schedule
     pub fn build(self) -> Result<Schedule, Box<dyn std::error::Error>> {
-        // TODO validate folder & task & action are Some
         if self.schedule.trigger.is_none() {
             return Err(Box::new(InvalidOperationError {
                 message: "Folder or trigger not set, cannot create scheduled task".to_string(),
@@ -186,12 +210,21 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         Ok(self)
     }
 
+    /// Closes the COM library on the current thread, unloads all DLLs loaded
+    /// by the thread, frees any other resources that the thread maintains, and
+    /// forces all RPC connections on the thread to close.
     pub fn uninitialize(self) {
         unsafe {
             CoUninitialize();
         }
     }
 
+    /// The amount of time that is allowed to complete the task.
+    /// The format for this string is PnYnMnDTnHnMnS, where nY is the number of years,
+    /// nM is the number of months, nD is the number of days, 'T' is the date/time separator,
+    /// nH is the number of hours, nM is the number of minutes, and nS is the number of
+    /// seconds (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies one month,
+    /// four days, two hours, and five minutes). A value of PT0S will enable the task to run indefinitely.
     pub fn execution_time_limit(
         self,
         time_limit: &str,
@@ -259,7 +292,64 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         }
     }
 
-    //pub fn set_repetition(&self, IRepetitionPattern) {}
+    /// Sets the repetition duration for a task.
+    /// If you specify a repetition duration for a task, you must also specify the repetition interval.
+    /// If you register a task that contains a trigger with a repetition interval equal to one minute
+    /// and a repetition duration equal to four minutes, the task will be launched five times. The five
+    /// repetitions can be defined by the following pattern.
+    ///
+    /// A task starts at the beginning of the first minute.
+    /// - The next task starts at the end of the first minute.
+    /// - The next task starts at the end of the second minute.
+    /// - The next task starts at the end of the third minute.
+    /// - The next task starts at the end of the fourth minute.
+    ///
+    /// # Parameters
+    /// ## duration
+    /// How long the pattern is repeated. The format for this string is PnYnMnDTnHnMnS, where nY is
+    /// the number of years, nM is the number of months, nD is the number of days, 'T' is the date/time
+    /// separator, nH is the number of hours, nM is the number of minutes, and nS is the number of seconds
+    /// (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies one month, four days, two hours,
+    /// and five minutes). The minimum time allowed is one minute.
+    ///
+    /// ## interval
+    /// The amount of time between each restart of the task. The format for this string is
+    /// P<days>DT<hours>H<minutes>M<seconds>S (for example, "PT5M" is 5 minutes, "PT1H" is 1 hour, and "PT20M"
+    /// is 20 minutes). The maximum time allowed is 31 days, and the minimum time allowed is 1 minute.
+    ///
+    /// # stop_at_duration_end
+    /// A Boolean value that indicates if a running instance of the task is stopped at the end of the repetition
+    /// pattern duration.
+    ///
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/repetitionpattern
+    pub fn repetition(
+        self,
+        duration: &str,
+        interval: &str,
+        stop_at_duration_end: bool,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(trigger) = &self.schedule.trigger {
+            unsafe {
+                let repetition: IRepetitionPattern = trigger.Repetition()?;
+                repetition.SetDuration(duration)?;
+                repetition.SetInterval(interval)?;
+
+                if stop_at_duration_end {
+                    repetition.StopAtDurationEnd(1 as *mut i16)?;
+                } else {
+                    repetition.StopAtDurationEnd(0 as *mut i16)?;
+                }
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(Box::new(InvalidOperationError {
+                message:
+                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger"
+                        .to_string(),
+            }))
+        }
+    }
 }
 
 impl ScheduleBuilder<Boot> {
@@ -302,6 +392,10 @@ impl ScheduleBuilder<Boot> {
 }
 
 impl ScheduleBuilder<Daily> {
+    /// Creates a daily trigger
+    /// The time of day that the task is started is set by the start_boundary method.
+    /// If `start_boundary()` is not set, it will default to `now` when the `schedule` is `registered()`
+    ///An interval of 1 produces a daily schedule. An interval of 2 produces an every other day schedule and so on.
     pub fn trigger(mut self, id: &str, enabled: i16) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_DAILY)?;
