@@ -1,6 +1,7 @@
 pub mod error;
 pub mod schedule;
 pub mod schedule_builder;
+pub mod settings;
 
 #[cfg(test)]
 mod tests {

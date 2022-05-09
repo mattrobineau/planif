@@ -1,5 +1,6 @@
 use crate::error::{InitializationError, InvalidOperationError};
 use crate::schedule::Schedule;
+use crate::settings::{PrincipalSettings, RunLevel};
 use windows::core::Interface;
 use windows::Win32::Foundation::BSTR;
 use windows::Win32::System::Com::VARIANT;
@@ -384,92 +385,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             Ok(self)
         }
     }
-}
-
-/// Use to set the settings for the principal
-/// # Properties
-///
-/// ## display_name
-/// Gets or sets the name of the principal that is displayed in the Task Scheduler UI.
-///
-/// ## group_id
-/// Gets or sets the identifier of the user group that is required to run the tasks that are associated with the principal.
-/// Do not set this property if a user identifier is specified in the user_id property.
-///
-/// ## id
-/// Gets or sets the identifier of the principal.
-///
-/// ## logon_type
-/// Gets or sets the security logon method that is required to run the tasks that are associated with the principal.
-/// This property is valid only when a user identifier is specified by the UserId property.
-///
-/// ## run_level
-/// Gets or sets the identifier that is used to specify the privilege level that is required to run the tasks
-/// that are associated with the principal.
-///
-/// ## user_id
-/// Gets or sets the user identifier that is required to run the tasks that are associated with the principal.
-/// Do not set this property if a group identifier is specified in the group_id property.
-///
-/// # Reference
-/// https://docs.microsoft.com/en-us/windows/win32/taskschd/principal
-pub struct PrincipalSettings {
-    display_name: String,
-    group_id: Option<String>,
-    id: String,
-    logon_type: LogonType,
-    run_level: RunLevel,
-    user_id: Option<String>,
-}
-
-/// Values for the identifier that is used to specify the privilege level that is required to run the tasks
-/// that are associated with the principal.
-/// # Highest
-/// Tasks will be run with the highest privileges.
-///
-/// # LUA
-/// Tasks will be run with the least privileges (LUA).
-pub enum RunLevel {
-    Highest = 1,
-    LUA = 0,
-}
-
-/// Values for the security logon method.
-///
-/// # None
-/// The logon method is not specified. Used for non-NT credentials.
-///
-/// # Password
-/// Use a password for logging on the user. The password must be supplied at registration time.
-///
-/// # S4U
-/// Use an existing interactive token to run a task. The user must log on using a service for user (S4U) logon.
-/// When an S4U logon is used, no password is stored by the system and there is no access to either the network
-/// or encrypted files.
-///
-/// # InteractiveToken
-/// User must already be logged on. The task will be run only in an existing interactive session.
-///
-/// # Group
-/// Group activation. The user_id field specifies the group.
-///
-/// # ServiceAccount
-/// Indicates that a Local System, Local Service, or Network Service account is being used as a security context
-/// to run the task.
-///
-/// # InteractiveTokenOrPassword
-/// First use the interactive token. If the user is not logged on (no interactive token is available), then the password
-/// is used. The password must be specified when a task is registered. This flag is not recommended for new tasks because
-/// it is less reliable than LogonType::Password.
-///
-pub enum LogonType {
-    None = 0,
-    Password,
-    S4U,
-    InteractiveToken,
-    Group,
-    ServiceAccount,
-    InteractiveTokenOrPassword,
 }
 
 impl ScheduleBuilder<Boot> {
