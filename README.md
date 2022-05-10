@@ -4,7 +4,7 @@
 Please refer to the `examples` folder. The folder contains code for creating each of the triggers.
 
 ## TODO
-### Triggers
+### Create Triggers
 - [x] Boot 
 - [x] Daily 
 - [ ] Event 
@@ -15,6 +15,10 @@ Please refer to the `examples` folder. The folder contains code for creating eac
 - [ ] Registration 
 - [x] Time 
 - [x] Weekly 
+
+### Other
+- [ ] Delete triggers
+- [ ] List triggers
 
 ## A builder library for the Windows Task Scheduler.
 
