@@ -8,7 +8,7 @@ Please refer to the `examples` folder. The folder contains code for creating eac
 - [x] Boot 
 - [x] Daily 
 - [ ] Event 
-- [x] Idle 
+- [ ] Idle 
 - [x] Logon 
 - [ ] MonthlyDOW 
 - [x] Monthly 
