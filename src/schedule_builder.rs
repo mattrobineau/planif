@@ -1,5 +1,5 @@
 use crate::{
-    enums::{DayOfMonth, DayOfWeek, Month},
+    enums::{DayOfMonth, DayOfWeek, Month, WeekOfMonth},
     error::{InitializationError, InvalidOperationError},
     schedule::Schedule,
     settings::{PrincipalSettings, RunLevel},
@@ -708,6 +708,155 @@ impl ScheduleBuilder<Monthly> {
     }
 }
 
+impl ScheduleBuilder<MonthlyDOW> {
+    /// Sets the days of the week during which the task runs.
+    /// # Example
+    /// ```
+    /// use planif::enums::DayOfWeek;
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly_dow()
+    ///     .trigger("MonthlyDOWTrigger", true)
+    ///     .days_of_week(vec![DayOfWeek::Sunday, DayOfWeek::Thursday]);
+    /// ```
+    pub fn days_of_week(self, days: Vec<DayOfWeek>) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(trigger) = &self.schedule.trigger {
+            let bitwise: i16 = days.into_iter().fold(0, |acc, item| acc + item as i16);
+            unsafe {
+                let i_monthly_dow_trigger: IMonthlyDOWTrigger =
+                    trigger.cast::<IMonthlyDOWTrigger>()?;
+                i_monthly_dow_trigger.SetDaysOfWeek(bitwise)?;
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Set the months of the year during which the task runs.
+    /// # Example
+    /// ```
+    /// use planif::enums::Month;
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly_dow()
+    ///     .trigger("MonthlyDOWTrigger", true)
+    ///     .months_of_year(vec![Month::January, Month::June, Month::December]);
+    /// ```
+    pub fn months_of_year(
+        mut self,
+        months: Vec<Month>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(i_trigger) = &self.schedule.trigger {
+            let bitwise: i16 = months.into_iter().fold(0, |acc, item| acc + item as i16);
+
+            unsafe {
+                let i_monthly_dow_trigger: IMonthlyDOWTrigger =
+                    i_trigger.cast::<IMonthlyDOWTrigger>()?;
+                i_monthly_dow_trigger.SetMonthsOfYear(bitwise);
+            }
+
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Specifies the delay time that is randomly added to the start time of the trigger.
+    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly_dow()
+    ///     .trigger("MonthlyDOWTrigger", true)
+    ///     .random_delay("P2DT5S");
+    /// ```
+    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(i_trigger) = &self.schedule.trigger {
+            unsafe {
+                let i_monthly_dow_trigger: IMonthlyDOWTrigger =
+                    i_trigger.cast::<IMonthlyDOWTrigger>()?;
+                i_monthly_dow_trigger.SetRandomDelay(delay)?;
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Sets the task to be run on the last day of the month, regardless of the actual date of
+    /// that day.
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly_dow()
+    ///     .trigger("MonthlyDOWTrigger", true)
+    ///     .run_on_last_week(true);
+    /// ```
+    pub fn run_on_last_week(self, is_run: bool) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(trigger) = &self.schedule.trigger {
+            unsafe {
+                let i_monthly_dow_trigger: IMonthlyDOWTrigger =
+                    trigger.cast::<IMonthlyDOWTrigger>()?;
+                i_monthly_dow_trigger.SetRunOnLastWeekOfMonth(is_run as i16);
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Sets the weeks of the month during which the task runs.
+    ///
+    /// # Example
+    /// ```
+    /// use planif::enums::WeekOfMonth;
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly_dow()
+    ///     .trigger("MonthlyDOWTrigger", true)
+    ///     .weeks_of_month(vec![WeekOfMonth::Third]);
+    /// ```
+    pub fn weeks_of_month(
+        mut self,
+        weeks: Vec<WeekOfMonth>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(trigger) = &self.schedule.trigger {
+            let bitwise: i16 = weeks.into_iter().fold(0, |acc, item| acc + item as i16);
+            unsafe {
+                let i_monthly_dow_trigger: IMonthlyDOWTrigger =
+                    trigger.cast::<IMonthlyDOWTrigger>()?;
+                i_monthly_dow_trigger.SetWeeksOfMonth(bitwise);
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Creates a trigger that starts a task on a monthly day-of-week schedule. For example, the
+    /// task starts on every first Thursday, May through October.
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly_dow()
+    ///     .trigger("MonthlyDOWTrigger", true);
+    /// ```
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            let trigger = self.schedule.triggers.Create(TASK_TRIGGER_MONTHLYDOW)?;
+            let i_monthly_dow_trigger: IMonthlyDOWTrigger = trigger.cast::<IMonthlyDOWTrigger>()?;
+            i_monthly_dow_trigger.SetId(id)?;
+            i_monthly_dow_trigger.SetEnabled(enabled.into())?;
+        }
+        Ok(self)
+    }
+}
+
 impl ScheduleBuilder<Time> {
     /// Creates a time trigger
     /// It is important to note that a time trigger is different from other time-based triggers in that
@@ -756,7 +905,7 @@ impl ScheduleBuilder<Weekly> {
         Ok(self)
     }
 
-    /// Specifies the day(s) of the week to run the command.
+    /// Sets the days of the week during which the task runs.
     pub fn days_of_week(self, days: Vec<DayOfWeek>) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             let bitwise: i16 = days.into_iter().fold(0, |acc, item| acc + item as i16);

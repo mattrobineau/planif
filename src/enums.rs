@@ -42,3 +42,10 @@ impl From<Month> for i16 {
         month as i16
     }
 }
+
+pub enum WeekOfMonth {
+    First = 1 << 1,
+    Second = 1 << 2,
+    Third = 1 << 3,
+    Fourth = 1 << 4,
+}
