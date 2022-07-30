@@ -1,10 +1,10 @@
 [package]
 name = "planif"
-authors = ["mattrobineau"]
+authors = ["Matt Robineau <matt@mrbn.ca>"]
 description = "planif is a builder pattern wrapper for the windows task scheduler API of windows-rs."
 license = "MIT"
 repository = "https://github.com/mattrobineau/planif"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 keywords = ["scheduled", "task", "windows"]
 categories = ["os::windows-apis"]

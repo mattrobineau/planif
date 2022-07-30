@@ -10,7 +10,7 @@ Please refer to the `examples` folder. The folder contains code for creating eac
 - [ ] Event 
 - [x] Idle 
 - [x] Logon 
-- [ ] MonthlyDOW 
+- [X] MonthlyDOW 
 - [x] Monthly 
 - [ ] Registration 
 - [x] Time 
