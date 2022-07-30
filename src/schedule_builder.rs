@@ -1,6 +1,9 @@
-use crate::error::{InitializationError, InvalidOperationError};
-use crate::schedule::Schedule;
-use crate::settings::{PrincipalSettings, RunLevel};
+use crate::{
+    enums::{DayOfMonth, DayOfWeek, Month},
+    error::{InitializationError, InvalidOperationError},
+    schedule::Schedule,
+    settings::{PrincipalSettings, RunLevel},
+};
 use windows::core::Interface;
 use windows::Win32::Foundation::BSTR;
 use windows::Win32::System::Com::VARIANT;
@@ -8,19 +11,26 @@ use windows::Win32::System::Com::{
     CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED,
 };
 use windows::Win32::System::TaskScheduler::{
-    IAction, IActionCollection, IBootTrigger, IDailyTrigger, IExecAction, IIdleTrigger,
-    ILogonTrigger, IPrincipal, IRegistrationInfo, IRepetitionPattern, ITaskDefinition, ITaskFolder,
+    IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IEventTrigger,
+    IExecAction, IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, IPrincipal,
+    IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskFolder,
     ITaskService, ITaskSettings, ITimeTrigger, ITrigger, ITriggerCollection, IWeeklyTrigger,
     TaskScheduler, TASK_ACTION_EXEC, TASK_LOGON_INTERACTIVE_TOKEN, TASK_LOGON_TYPE,
-    TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT, TASK_TRIGGER_DAILY, TASK_TRIGGER_IDLE,
-    TASK_TRIGGER_LOGON, TASK_TRIGGER_TIME, TASK_TRIGGER_WEEKLY,
+    TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT, TASK_TRIGGER_DAILY, TASK_TRIGGER_EVENT,
+    TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON, TASK_TRIGGER_MONTHLY, TASK_TRIGGER_MONTHLYDOW,
+    TASK_TRIGGER_REGISTRATION, TASK_TRIGGER_TIME, TASK_TRIGGER_WEEKLY,
 };
 
 /* triggers */
 pub struct Base {}
 pub struct Boot {}
 pub struct Daily {}
+pub struct Event {}
+pub struct Idle {}
 pub struct Logon {}
+pub struct Monthly {}
+pub struct MonthlyDOW {}
+pub struct Registration {}
 pub struct Time {}
 pub struct Weekly {}
 
@@ -102,6 +112,20 @@ impl ScheduleBuilder<Base> {
         }
     }
 
+    /// Creates a builder for an idle trigger.
+    ///
+    /// # Example
+    ///
+    /// ``` let schedule: Schedule = Schedule::builder().new()
+    ///         .create_idle();
+    /// ```
+    pub fn create_idle(self) -> ScheduleBuilder<Idle> {
+        ScheduleBuilder::<Idle> {
+            frequency: std::marker::PhantomData::<Idle>,
+            schedule: self.schedule,
+        }
+    }
+
     /// Creates a builder for a logon trigger.
     ///
     /// # Example
@@ -113,6 +137,34 @@ impl ScheduleBuilder<Base> {
     pub fn create_logon(self) -> ScheduleBuilder<Logon> {
         ScheduleBuilder::<Logon> {
             frequency: std::marker::PhantomData::<Logon>,
+            schedule: self.schedule,
+        }
+    }
+
+    /// Creates a builder for a monthly trigger.
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly();
+    /// ```
+    pub fn create_monthly(self) -> ScheduleBuilder<Monthly> {
+        ScheduleBuilder::<Monthly> {
+            frequency: std::marker::PhantomData::<Monthly>,
+            schedule: self.schedule,
+        }
+    }
+
+    /// Creates a builder for a monthly day of week trigger.
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly_dow();
+    /// ```
+    pub fn create_monthly_dow(self) -> ScheduleBuilder<MonthlyDOW> {
+        ScheduleBuilder::<MonthlyDOW> {
+            frequency: std::marker::PhantomData::<MonthlyDOW>,
             schedule: self.schedule,
         }
     }
@@ -334,12 +386,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
                 let repetition: IRepetitionPattern = trigger.Repetition()?;
                 repetition.SetDuration(duration)?;
                 repetition.SetInterval(interval)?;
-
-                if stop_at_duration_end {
-                    repetition.StopAtDurationEnd(1 as *mut i16)?;
-                } else {
-                    repetition.StopAtDurationEnd(0 as *mut i16)?;
-                }
+                repetition.SetStopAtDurationEnd(stop_at_duration_end as i16)?;
             }
             Ok(self)
         } else {
@@ -392,12 +439,12 @@ impl ScheduleBuilder<Boot> {
     /// and boot trigger tasks are set to start when the Task Scheduler service starts.
     /// Only a member of the Administrators group can create a task with a boot trigger.
     /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/boottrigger
-    pub fn trigger(mut self, id: &str, enabled: i16) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_BOOT)?;
             let i_boot_trigger: IBootTrigger = trigger.cast::<IBootTrigger>()?;
             i_boot_trigger.SetId(id)?;
-            i_boot_trigger.SetEnabled(enabled)?;
+            i_boot_trigger.SetEnabled(enabled.into())?;
             // Default start boundary to now()
             self.schedule.trigger = Some(i_boot_trigger.into());
         }
@@ -417,11 +464,7 @@ impl ScheduleBuilder<Boot> {
             Ok(self)
         } else {
             self.uninitialize();
-            Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }))
+            Err(trigger_uninitialised_error())
         }
     }
 }
@@ -431,12 +474,12 @@ impl ScheduleBuilder<Daily> {
     /// The time of day that the task is started is set by the start_boundary method.
     /// If `start_boundary()` is not set, it will default to `now` when the `schedule` is `registered()`
     ///An interval of 1 produces a daily schedule. An interval of 2 produces an every other day schedule and so on.
-    pub fn trigger(mut self, id: &str, enabled: i16) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_DAILY)?;
             let i_daily_trigger: IDailyTrigger = trigger.cast::<IDailyTrigger>()?;
             i_daily_trigger.SetId(id)?;
-            i_daily_trigger.SetEnabled(enabled)?;
+            i_daily_trigger.SetEnabled(enabled.into())?;
             self.schedule.trigger = Some(i_daily_trigger.into());
         }
         Ok(self)
@@ -453,11 +496,7 @@ impl ScheduleBuilder<Daily> {
             Ok(self)
         } else {
             self.uninitialize();
-            return Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }));
+            Err(trigger_uninitialised_error())
         }
     }
 
@@ -473,23 +512,33 @@ impl ScheduleBuilder<Daily> {
             Ok(self)
         } else {
             self.uninitialize();
-            return Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }));
+            Err(trigger_uninitialised_error())
         }
+    }
+}
+
+impl ScheduleBuilder<Idle> {
+    /// Create an idle trigger
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            let trigger = self.schedule.triggers.Create(TASK_TRIGGER_IDLE)?;
+            let i_idle_trigger: IIdleTrigger = trigger.cast::<IIdleTrigger>()?;
+            i_idle_trigger.SetId(id)?;
+            i_idle_trigger.SetEnabled(enabled.into())?;
+            self.schedule.trigger = Some(i_idle_trigger.into());
+        }
+        Ok(self)
     }
 }
 
 impl ScheduleBuilder<Logon> {
     /// Create a logon trigger.
-    pub fn trigger(mut self, id: &str, enabled: i16) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_LOGON)?;
             let i_logon_trigger: ILogonTrigger = trigger.cast::<ILogonTrigger>()?;
             i_logon_trigger.SetId(id)?;
-            i_logon_trigger.SetEnabled(enabled)?;
+            i_logon_trigger.SetEnabled(enabled.into())?;
 
             self.schedule.trigger = Some(i_logon_trigger.into());
         }
@@ -508,11 +557,7 @@ impl ScheduleBuilder<Logon> {
             Ok(self)
         } else {
             self.uninitialize();
-            Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }))
+            Err(trigger_uninitialised_error())
         }
     }
 
@@ -531,12 +576,135 @@ impl ScheduleBuilder<Logon> {
             Ok(self)
         } else {
             self.uninitialize();
-            Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }))
+            Err(trigger_uninitialised_error())
         }
+    }
+}
+
+impl ScheduleBuilder<Monthly> {
+    /// Set the days of the month during which the task runs.
+    /// # Example
+    /// ```
+    /// use planif::enums::DayOfMonth;
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly()
+    ///     .days_of_months(vec![DayOfMonth::Day(1), DayOfMonth::Day(15), DayOfMonth::Day(31)]);
+    /// ```
+    pub fn days_of_months(
+        mut self,
+        days: Vec<DayOfMonth>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(i_trigger) = &self.schedule.trigger {
+            let result = days.iter().any(|&x| match &x {
+                DayOfMonth::Day(int) => int < &1 || int > &31,
+                DayOfMonth::Last => false,
+            });
+
+            let bitwise = days.into_iter().fold(0, |acc, item| {
+                let day: i32 = item.into();
+                acc + (1 << day - 1)
+            });
+
+            unsafe {
+                let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
+                i_monthly_trigger.SetDaysOfMonth(bitwise);
+            }
+
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Set the months of the year during which the task runs.
+    /// # Example
+    /// ```
+    /// use planif::enums::Month;
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly()
+    ///     .months_of_year(vec![Month::January, Month::June, Month::December]);
+    /// ```
+    pub fn months_of_year(
+        mut self,
+        months: Vec<Month>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(i_trigger) = &self.schedule.trigger {
+            let bitwise: i16 = months.into_iter().fold(0, |acc, item| acc + item as i16);
+
+            unsafe {
+                let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
+                i_monthly_trigger.SetMonthsOfYear(bitwise);
+            }
+
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Specifies the delay time that is randomly added to the start time of the trigger.
+    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly()
+    ///     .random_delay("P2DT5S");
+    /// ```
+    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(i_trigger) = &self.schedule.trigger {
+            unsafe {
+                let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
+                i_monthly_trigger.SetRandomDelay(delay)?;
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Sets the task to be run on the last day of the month, regardless of the actual date of
+    /// that day.
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly()
+    ///     .run_on_last_day(true);
+    /// ```
+    pub fn run_on_last_day(self, is_run: bool) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(i_trigger) = &self.schedule.trigger {
+            unsafe {
+                let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
+                i_monthly_trigger.SetRunOnLastDayOfMonth(is_run as i16);
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Creates a trigger based on a monthly schedule, for example, the task starts on specific
+    /// days of specific months
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_monthly()
+    ///     .trigger("MyTrigger", true);
+    /// ```
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            let trigger = self.schedule.triggers.Create(TASK_TRIGGER_MONTHLY)?;
+            let i_monthly_trigger: IMonthlyTrigger = trigger.cast::<IMonthlyTrigger>()?;
+            i_monthly_trigger.SetId(id)?;
+            i_monthly_trigger.SetEnabled(enabled.into())?;
+            self.schedule.trigger = Some(i_monthly_trigger.into());
+        }
+        Ok(self)
     }
 }
 
@@ -546,12 +714,12 @@ impl ScheduleBuilder<Time> {
     /// it is fired when the trigger is activated by its start boundary. Other time-based triggers are
     /// activated by their start boundary, but they do not start performing their actions
     /// until a scheduled date is reached.
-    pub fn trigger(mut self, id: &str, enabled: i16) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_TIME)?;
             let i_time_trigger: ITimeTrigger = trigger.cast::<ITimeTrigger>()?;
             i_time_trigger.SetId(id)?;
-            i_time_trigger.SetEnabled(enabled)?;
+            i_time_trigger.SetEnabled(enabled.into())?;
 
             self.schedule.trigger = Some(i_time_trigger.into());
         }
@@ -570,22 +738,18 @@ impl ScheduleBuilder<Time> {
             Ok(self)
         } else {
             self.uninitialize();
-            return Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }));
+            Err(trigger_uninitialised_error())
         }
     }
 }
 
 impl ScheduleBuilder<Weekly> {
-    pub fn trigger(mut self, id: &str, enabled: i16) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_WEEKLY)?;
             let i_weekly_trigger: IWeeklyTrigger = trigger.cast::<IWeeklyTrigger>()?;
             i_weekly_trigger.SetId(id)?;
-            i_weekly_trigger.SetEnabled(enabled)?;
+            i_weekly_trigger.SetEnabled(enabled.into())?;
 
             self.schedule.trigger = Some(i_weekly_trigger.into());
         }
@@ -593,30 +757,17 @@ impl ScheduleBuilder<Weekly> {
     }
 
     /// Specifies the day(s) of the week to run the command.
-    /// days is a bitwise mask that indicated the days of the week on which the task runs.
-    /// |Weekday|Hex Value|Decimal Value|
-    /// |---|---|
-    /// |Sunday|0x01|1|
-    /// |Monday|0x02|2|
-    /// |Tuesday|0x04|4|
-    /// |Wednesday|0x08|8|
-    /// |Thursday|0x10|16|
-    /// |Friday|0x20|32|
-    /// |Saturday|0x40|64|
-    pub fn days_of_week(self, days: i16) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn days_of_week(self, days: Vec<DayOfWeek>) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
+            let bitwise: i16 = days.into_iter().fold(0, |acc, item| acc + item as i16);
             unsafe {
                 let i_weekly_trigger: IWeeklyTrigger = i_trigger.cast::<IWeeklyTrigger>()?;
-                i_weekly_trigger.SetDaysOfWeek(days)?;
+                i_weekly_trigger.SetDaysOfWeek(bitwise)?;
             }
             Ok(self)
         } else {
             self.uninitialize();
-            return Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }));
+            Err(trigger_uninitialised_error())
         }
     }
 
@@ -631,11 +782,7 @@ impl ScheduleBuilder<Weekly> {
             Ok(self)
         } else {
             self.uninitialize();
-            return Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }));
+            Err(trigger_uninitialised_error())
         }
     }
 
@@ -651,13 +798,16 @@ impl ScheduleBuilder<Weekly> {
             Ok(self)
         } else {
             self.uninitialize();
-            return Err(Box::new(InvalidOperationError {
-                message:
-                    "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
-                        .to_string(),
-            }));
+            Err(trigger_uninitialised_error())
         }
     }
+}
+
+fn trigger_uninitialised_error() -> Box<dyn std::error::Error> {
+    return Box::new(InvalidOperationError {
+        message: "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
+            .to_string(),
+    });
 }
 
 /* actions */

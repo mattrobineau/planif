@@ -1,3 +1,4 @@
+pub mod enums;
 pub mod error;
 pub mod schedule;
 pub mod schedule_builder;

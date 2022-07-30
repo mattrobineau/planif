@@ -15,6 +15,7 @@ Please refer to the `examples` folder. The folder contains code for creating eac
 - [ ] Registration 
 - [x] Time 
 - [x] Weekly 
+- [ ] IdleSettings 
 
 ### Other
 - [ ] Delete triggers
