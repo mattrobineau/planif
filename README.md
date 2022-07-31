@@ -7,17 +7,21 @@ Please refer to the `examples` folder. The folder contains code for creating eac
 ### Create Triggers
 - [x] Boot 
 - [x] Daily 
-- [ ] Event 
-- [ ] Idle 
+- [X] Event 
+- [X] Idle 
 - [x] Logon 
 - [X] MonthlyDOW 
 - [x] Monthly 
-- [ ] Registration 
+- [X] Registration 
 - [x] Time 
 - [x] Weekly 
+
+### Trigger settings
 - [ ] IdleSettings 
 
-### Other
+Other settings may also be missing.
+
+### Other (maybe)
 - [ ] Delete triggers
 - [ ] List triggers
 

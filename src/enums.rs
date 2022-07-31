@@ -3,7 +3,7 @@ pub enum DayOfMonth {
     Last,
 }
 
-impl From<DayOfMonth> for i32 {
+impl From<DayOfMonth> for u32 {
     fn from(day: DayOfMonth) -> Self {
         match day {
             DayOfMonth::Day(i) => 1 << i,

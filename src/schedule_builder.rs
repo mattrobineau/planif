@@ -1,8 +1,8 @@
 use crate::{
     enums::{DayOfMonth, DayOfWeek, Month, WeekOfMonth},
-    error::{InitializationError, InvalidOperationError},
+    error::InvalidOperationError,
     schedule::Schedule,
-    settings::{PrincipalSettings, RunLevel},
+    settings::PrincipalSettings,
 };
 use windows::core::Interface;
 use windows::Win32::Foundation::BSTR;
@@ -11,14 +11,13 @@ use windows::Win32::System::Com::{
     CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED,
 };
 use windows::Win32::System::TaskScheduler::{
-    IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IEventTrigger,
-    IExecAction, IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, IPrincipal,
-    IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskFolder,
-    ITaskService, ITaskSettings, ITimeTrigger, ITrigger, ITriggerCollection, IWeeklyTrigger,
-    TaskScheduler, TASK_ACTION_EXEC, TASK_LOGON_INTERACTIVE_TOKEN, TASK_LOGON_TYPE,
-    TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT, TASK_TRIGGER_DAILY, TASK_TRIGGER_EVENT,
-    TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON, TASK_TRIGGER_MONTHLY, TASK_TRIGGER_MONTHLYDOW,
-    TASK_TRIGGER_REGISTRATION, TASK_TRIGGER_TIME, TASK_TRIGGER_WEEKLY,
+    IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IExecAction,
+    IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, IPrincipal,
+    IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskService,
+    ITaskSettings, ITimeTrigger, ITriggerCollection, IWeeklyTrigger, TaskScheduler,
+    TASK_ACTION_EXEC, TASK_LOGON_TYPE, TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT, TASK_TRIGGER_DAILY,
+    TASK_TRIGGER_EVENT, TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON, TASK_TRIGGER_MONTHLY,
+    TASK_TRIGGER_MONTHLYDOW, TASK_TRIGGER_REGISTRATION, TASK_TRIGGER_TIME, TASK_TRIGGER_WEEKLY,
 };
 
 /* triggers */
@@ -112,6 +111,22 @@ impl ScheduleBuilder<Base> {
         }
     }
 
+    /// Creates a builder for an event trigger.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_event();
+    /// ```
+    pub fn create_event(mut self) -> ScheduleBuilder<Event> {
+        self.schedule.force_start_boundary = true;
+        ScheduleBuilder::<Event> {
+            frequency: std::marker::PhantomData::<Event>,
+            schedule: self.schedule,
+        }
+    }
+
     /// Creates a builder for an idle trigger.
     ///
     /// # Example
@@ -166,6 +181,20 @@ impl ScheduleBuilder<Base> {
     pub fn create_monthly_dow(self) -> ScheduleBuilder<MonthlyDOW> {
         ScheduleBuilder::<MonthlyDOW> {
             frequency: std::marker::PhantomData::<MonthlyDOW>,
+            schedule: self.schedule,
+        }
+    }
+
+    /// Creates a builder for a trigger that starts a task when the task is registered or updated.
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_registration();
+    /// ```
+    pub fn create_registration(self) -> ScheduleBuilder<Registration> {
+        ScheduleBuilder::<Registration> {
+            frequency: std::marker::PhantomData::<Registration>,
             schedule: self.schedule,
         }
     }
@@ -612,8 +641,93 @@ impl ScheduleBuilder<Daily> {
     }
 }
 
+impl ScheduleBuilder<Event> {
+    /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
+    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/eventtrigger-delay
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_event()
+    ///     .trigger("MyTrigger", true)
+    ///     .delay("P2DT5S");
+    /// ```
+    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(trigger) = &self.schedule.trigger {
+            unsafe {
+                let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
+                i_event_trigger.SetDelay(delay)?;
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Specifies a query string that identifies the event that fires the trigger.
+    /// see Event Selection: https://docs.microsoft.com/en-us/previous-versions//aa385231(v=vs.85)
+    /// see Subscribing to Events: https://docs.microsoft.com/en-us/windows/win32/wes/subscribing-to-events
+    pub fn subscription(self, query: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(trigger) = &self.schedule.trigger {
+            unsafe {
+                let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
+                i_event_trigger.SetSubscription(query)?;
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Create an event trigger.
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_event()
+    ///     .trigger("MyTrigger", true);
+    /// ```
+    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            let trigger = self.schedule.triggers.Create(TASK_TRIGGER_EVENT)?;
+            let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
+            i_event_trigger.SetId(id)?;
+            i_event_trigger.SetEnabled(enabled.into())?;
+            self.schedule.trigger = Some(i_event_trigger.into());
+        }
+        Ok(self)
+    }
+
+    /// Specifies a collection of named XPath queries. Each name-value pair in the collection
+    /// defines a unique name for a property value of the event that triggers the event trigger.
+    /// The property value of the event is defined as an XPath event query.
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/eventtrigger-valuequeries
+    pub fn value_queries(
+        self,
+        queries: Vec<(&str, &str)>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(trigger) = &self.schedule.trigger {
+            unsafe {
+                let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
+                let i_task_named_value_collection = i_event_trigger.ValueQueries()?;
+
+                for (name, value) in queries {
+                    i_task_named_value_collection.Create(name, value)?;
+                }
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+}
+
 impl ScheduleBuilder<Idle> {
-    /// Create an idle trigger
+    /// Create an idle trigger.
     ///
     /// # Example
     /// ```
@@ -716,24 +830,29 @@ impl ScheduleBuilder<Monthly> {
     ///     .trigger("MyTrigger", true)
     ///     .days_of_months(vec![DayOfMonth::Day(1), DayOfMonth::Day(15), DayOfMonth::Day(31)]);
     /// ```
-    pub fn days_of_months(
-        mut self,
-        days: Vec<DayOfMonth>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn days_of_months(self, days: Vec<DayOfMonth>) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
-            let result = days.iter().any(|&x| match &x {
+            let result = days.iter().any(|x| match &x {
                 DayOfMonth::Day(int) => int < &1 || int > &31,
                 DayOfMonth::Last => false,
             });
 
+            if !result {
+                return Err(Box::new(InvalidOperationError {
+                    message:
+                        "Index out of bounds. Days of month must be between 1 and 31 inclusively."
+                            .to_string(),
+                }));
+            }
+
             let bitwise = days.into_iter().fold(0, |acc, item| {
-                let day: i32 = item.into();
+                let day: u32 = item.into();
                 acc + (1 << day - 1)
             });
 
             unsafe {
                 let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
-                i_monthly_trigger.SetDaysOfMonth(bitwise);
+                i_monthly_trigger.SetDaysOfMonth(bitwise)?;
             }
 
             Ok(self)
@@ -752,16 +871,13 @@ impl ScheduleBuilder<Monthly> {
     ///     .trigger("MyTrigger", true)
     ///     .months_of_year(vec![Month::January, Month::June, Month::December]);
     /// ```
-    pub fn months_of_year(
-        mut self,
-        months: Vec<Month>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn months_of_year(self, months: Vec<Month>) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             let bitwise: i16 = months.into_iter().fold(0, |acc, item| acc + item as i16);
 
             unsafe {
                 let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
-                i_monthly_trigger.SetMonthsOfYear(bitwise);
+                i_monthly_trigger.SetMonthsOfYear(bitwise)?;
             }
 
             Ok(self)
@@ -808,7 +924,7 @@ impl ScheduleBuilder<Monthly> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
-                i_monthly_trigger.SetRunOnLastDayOfMonth(is_run as i16);
+                i_monthly_trigger.SetRunOnLastDayOfMonth(is_run as i16)?;
             }
             Ok(self)
         } else {
@@ -871,17 +987,14 @@ impl ScheduleBuilder<MonthlyDOW> {
     ///     .trigger("MonthlyDOWTrigger", true)
     ///     .months_of_year(vec![Month::January, Month::June, Month::December]);
     /// ```
-    pub fn months_of_year(
-        mut self,
-        months: Vec<Month>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn months_of_year(self, months: Vec<Month>) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             let bitwise: i16 = months.into_iter().fold(0, |acc, item| acc + item as i16);
 
             unsafe {
                 let i_monthly_dow_trigger: IMonthlyDOWTrigger =
                     i_trigger.cast::<IMonthlyDOWTrigger>()?;
-                i_monthly_dow_trigger.SetMonthsOfYear(bitwise);
+                i_monthly_dow_trigger.SetMonthsOfYear(bitwise)?;
             }
 
             Ok(self)
@@ -930,7 +1043,7 @@ impl ScheduleBuilder<MonthlyDOW> {
             unsafe {
                 let i_monthly_dow_trigger: IMonthlyDOWTrigger =
                     trigger.cast::<IMonthlyDOWTrigger>()?;
-                i_monthly_dow_trigger.SetRunOnLastWeekOfMonth(is_run as i16);
+                i_monthly_dow_trigger.SetRunOnLastWeekOfMonth(is_run as i16)?;
             }
             Ok(self)
         } else {
@@ -950,7 +1063,7 @@ impl ScheduleBuilder<MonthlyDOW> {
     ///     .weeks_of_month(vec![WeekOfMonth::Third]);
     /// ```
     pub fn weeks_of_month(
-        mut self,
+        self,
         weeks: Vec<WeekOfMonth>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
@@ -958,7 +1071,7 @@ impl ScheduleBuilder<MonthlyDOW> {
             unsafe {
                 let i_monthly_dow_trigger: IMonthlyDOWTrigger =
                     trigger.cast::<IMonthlyDOWTrigger>()?;
-                i_monthly_dow_trigger.SetWeeksOfMonth(bitwise);
+                i_monthly_dow_trigger.SetWeeksOfMonth(bitwise)?;
             }
             Ok(self)
         } else {
@@ -973,14 +1086,60 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// ```
     /// let schedule: Schedule = Schedule::builder().new()
     ///     .create_monthly_dow()
-    ///     .trigger("MonthlyDOWTrigger", true);
+    ///     .trigger("MyTrigger", true);
     /// ```
-    pub fn trigger(mut self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn trigger(self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_MONTHLYDOW)?;
             let i_monthly_dow_trigger: IMonthlyDOWTrigger = trigger.cast::<IMonthlyDOWTrigger>()?;
             i_monthly_dow_trigger.SetId(id)?;
             i_monthly_dow_trigger.SetEnabled(enabled.into())?;
+        }
+        Ok(self)
+    }
+}
+
+impl ScheduleBuilder<Registration> {
+    /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
+    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
+    /// see https://docs.microsoft.com/en-us/windows/win32/taskschd/logontrigger-delay
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_registration()
+    ///     .trigger("MyTrigger", true)
+    ///     .delay("P2DT5S");
+    /// ```
+    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        if let Some(trigger) = &self.schedule.trigger {
+            unsafe {
+                let i_registration_trigger: IRegistrationTrigger =
+                    trigger.cast::<IRegistrationTrigger>()?;
+                i_registration_trigger.SetDelay(delay)?;
+            }
+            Ok(self)
+        } else {
+            self.uninitialize();
+            Err(trigger_uninitialised_error())
+        }
+    }
+
+    /// Creates a trigger that starts a task when the task is registered or updated.
+    ///
+    /// # Example
+    /// ```
+    /// let schedule: Schedule = Schedule::builder().new()
+    ///     .create_registration()
+    ///     .trigger("MyTrigger", true);
+    /// ```
+    pub fn trigger(self, id: &str, enabled: bool) -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            let trigger = self.schedule.triggers.Create(TASK_TRIGGER_REGISTRATION)?;
+            let i_registration_trigger: IRegistrationTrigger =
+                trigger.cast::<IRegistrationTrigger>()?;
+            i_registration_trigger.SetId(id)?;
+            i_registration_trigger.SetEnabled(enabled.into())?;
         }
         Ok(self)
     }
