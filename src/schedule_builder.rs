@@ -717,6 +717,8 @@ impl ScheduleBuilder<Event> {
                 for (name, value) in queries {
                     i_task_named_value_collection.Create(name, value)?;
                 }
+
+                i_event_trigger.SetValueQueries(i_task_named_value_collection)?;
             }
             Ok(self)
         } else {

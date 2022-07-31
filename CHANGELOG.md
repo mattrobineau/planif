@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+* Assign value queries to trigger
+
 ## [0.1.0] - 2022-07-30
 
 This release completes the available triggers in the Windows Task Scheduler.
