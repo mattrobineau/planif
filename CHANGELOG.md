@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2022-08-04
+
 ### Added
 * Examples for monthly and monthly dow (day of week)
 * Added Error when not setting a start_boundary for calendar events
