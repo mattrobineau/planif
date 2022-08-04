@@ -1,4 +1,3 @@
-use crate::schedule_builder::{Base, ScheduleBuilder};
 use windows::Win32::Foundation::BSTR;
 use windows::Win32::System::TaskScheduler::{
     IActionCollection, IRegistrationInfo, ITaskDefinition, ITaskFolder, ITaskService,
@@ -19,7 +18,7 @@ pub struct Schedule {
 }
 
 /// Task Creation constants
-/// see https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_creation
+/// see <https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_creation>
 #[derive(Debug, PartialEq)]
 pub enum TaskCreationFlags {
     Create = 2,
@@ -32,14 +31,7 @@ pub enum TaskCreationFlags {
 }
 
 impl Schedule {
-    pub fn builder(self) -> ScheduleBuilder {
-        ScheduleBuilder {
-            frequency: std::marker::PhantomData::<Base>,
-            schedule: self,
-        }
-    }
-
-    /// Register the constructed schedule
+    /// Registers the schedule
     pub fn register(self, task_name: &str, flags: i32) -> Result<(), Box<dyn std::error::Error>> {
         unsafe {
             let folder: ITaskFolder = self.task_service.GetFolder("\\")?;

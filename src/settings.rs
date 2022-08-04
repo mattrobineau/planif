@@ -62,7 +62,7 @@ pub enum LogonType {
 /// Do not set this property if a group identifier is specified in the group_id property.
 ///
 /// # Reference
-/// https://docs.microsoft.com/en-us/windows/win32/taskschd/principal
+/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/principal>
 pub struct PrincipalSettings {
     pub display_name: String,
     pub group_id: Option<String>,
@@ -88,8 +88,9 @@ pub enum RunLevel {
 ///
 /// # Example
 /// ```
+/// use planif::settings::Settings;
 /// // All values are set to `None` when using `new()`
-/// let settings = settings::new();
+/// let mut settings = Settings::new();
 /// settings.allow_demand_start = Some(true);
 /// ```
 ///
@@ -178,11 +179,11 @@ pub enum RunLevel {
 /// Gets or sets an XML-formatted definition of the task settings.
 ///
 /// # References
-/// https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings
-/// https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-priority
-/// https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
-/// https://docs.microsoft.com/en-us/windows/win32/taskschd/networksettings
-/// https://docs.microsoft.com/en-us/windows/win32/taskschd/idlesettings
+/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings>
+/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-priority>
+/// <https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities>
+/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/networksettings>
+/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/idlesettings>
 
 pub struct Settings {
     pub allow_demand_start: Option<bool>,
@@ -245,7 +246,8 @@ impl Settings {
 /// Tasks compatible with the AT command can only have one time trigger.
 /// Tasks compatible with Task Scheduler 1.0 can only have a time trigger, a logon trigger, or a boot trigger, and the
 /// task can only have an executable action.
-/// see https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-compatibility
+///
+/// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-compatibility>
 pub enum Compatibility {
     AT = 0,
     V1,

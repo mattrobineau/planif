@@ -1,6 +1,5 @@
 use std::{error::Error, fmt};
 
-
 #[derive(Debug)]
 pub struct InvalidOperationError {
     pub message: String,
@@ -24,5 +23,18 @@ impl Error for InitializationError {}
 impl fmt::Display for InitializationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Initialization Error: {}", self.message)
+    }
+}
+
+#[derive(Debug)]
+pub struct RequiredPropertyError {
+    pub message: String,
+}
+
+impl Error for RequiredPropertyError {}
+
+impl fmt::Display for RequiredPropertyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Required Property Error: {}", self.message)
     }
 }

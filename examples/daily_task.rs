@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     sb.create_daily()
         .author("Matt")?
         .description("Test Trigger")?
-        .trigger("test_trigger", 1)?
+        .trigger("test_trigger", true)?
         .days_interval(1)?
         .action(Action::new("test", "notepad.exe", "", ""))?
         .start_boundary(&Local::now().to_rfc3339())?

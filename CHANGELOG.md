@@ -6,8 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+* Examples for monthly and monthly dow (day of week)
+* Added Error when not setting a start_boundary for calendar events
+
 ### Fixed
 * Assign value queries to trigger
+* Fix documentation examples
+* Fix DaysOfMonth values
+* Fix Month values
+* Fix monthly and monthly dow triggers
+
+# Known issues
+- Setting the DaysOfMonth to `DaysOfMonth::Last` causes an i32 overflow. The windows-rs call to 
+[SetDaysOfMonth](https://microsoft.github.io/windows-docs-rs/doc/windows/Win32/System/TaskScheduler/struct.IMonthlyTrigger.html#method.SetDaysOfMonth)
+takes an i32 but also expects the `Last` value to be `0x80000000`. For the time being, the library ignores
+the overflow error with `#[allow(overflowing_literals)]`.
 
 ## [0.1.0] - 2022-07-30
 

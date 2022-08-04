@@ -1,0 +1,730 @@
+
+running 1 test
+test tests::it_works ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 50 tests
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::principal (line 526) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_logon (line 164) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::author (line 288) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::build (line 307) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_boot (line 90) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_idle (line 146) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_time (line 233) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_event (line 127) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_monthly_dow (line 198) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_monthly (line 181) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_registration (line 215) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_weekly (line 252) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_daily (line 108) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::new (line 45) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Boot>::delay (line 611) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Boot>::trigger (line 584) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::random_delay (line 691) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::days_interval (line 664) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Event>::trigger (line 765) ... FAILED
+test src\settings.rs - settings::Settings (line 90) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Event>::delay (line 721) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::end_boundary (line 432) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::execution_time_limit (line 363) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::repetition (line 487) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::trigger (line 641) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::description (line 327) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::start_boundary (line 400) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::delay (line 866) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::trigger (line 840) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::user_id (line 897) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Idle>::trigger (line 816) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::months_of_year (line 967) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::days_of_months (line 923) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::random_delay (line 998) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::run_on_last_day (line 1024) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::trigger (line 1049) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::days_of_week (line 1072) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::months_of_year (line 1099) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::random_delay (line 1131) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::run_on_last_week (line 1158) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::trigger (line 1215) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::weeks_of_month (line 1184) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Registration>::delay (line 1241) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Registration>::trigger (line 1267) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Time>::random_delay (line 1323) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Time>::trigger (line 1296) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::random_delay (line 1430) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::days_of_week (line 1374) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::trigger (line 1351) ... FAILED
+test src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::weeks_interval (line 1401) ... FAILED
+
+failures:
+
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::principal (line 526) stdout ----
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: expected one of `.`, `;`, `?`, `else`, or an operator, found keyword `use`[0m
+[0m  [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:537:1[0m
+[0m   [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m12[0m[0m [0m[0m[1m[38;5;14m| [0m[0m}[0m
+[0m   [0m[0m[1m[38;5;14m| [0m[0m [0m[0m[1m[38;5;14m-[0m[0m [0m[0m[1m[38;5;14mexpected one of `.`, `;`, `?`, `else`, or an operator[0m
+[0m[1m[38;5;14m13[0m[0m [0m[0m[1m[38;5;14m| [0m
+[0m[1m[38;5;14m14[0m[0m [0m[0m[1m[38;5;14m| [0m[0muse planif::schedule::Schedule;[0m
+[0m   [0m[0m[1m[38;5;14m| [0m[0m[1m[38;5;9m^^^[0m[0m [0m[0m[1m[38;5;9munexpected token[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_logon (line 164) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_logon` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:169:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_logon();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::author (line 288) stdout ----
+[0m[1m[38;5;9merror[E0412][0m[0m[1m[38;5;15m: cannot find type `Schedule` in this scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:289:15[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m3[0m[0m [0m[0m[1m[38;5;14m| [0m[0mlet schedule: Schedule = Schedule::builer().new()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m              [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14mhelp[0m[0m: consider importing this struct[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m2[0m[0m [0m[0m[1m[38;5;14m| [0m[0m[38;5;10muse planif::schedule::Schedule;[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+
+[0m[1m[38;5;9merror[E0433][0m[0m[1m[38;5;15m: failed to resolve: use of undeclared type `Schedule`[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:289:26[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m3[0m[0m [0m[0m[1m[38;5;14m| [0m[0mlet schedule: Schedule = Schedule::builer().new()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m                         [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14mhelp[0m[0m: consider importing this struct[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m2[0m[0m [0m[0m[1m[38;5;14m| [0m[0m[38;5;10muse planif::schedule::Schedule;[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to 2 previous errors[0m
+
+[0m[1m[38;5;15mSome errors have detailed explanations: E0412, E0433.[0m
+[0m[1m[38;5;15mFor more information about an error, try `rustc --explain E0412`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::build (line 307) stdout ----
+[0m[1m[38;5;9merror[E0412][0m[0m[1m[38;5;15m: cannot find type `Schedule` in this scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:308:15[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m3[0m[0m [0m[0m[1m[38;5;14m| [0m[0mlet schedule: Schedule = Schedule::builer().new()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m              [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14mhelp[0m[0m: consider importing this struct[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m2[0m[0m [0m[0m[1m[38;5;14m| [0m[0m[38;5;10muse planif::schedule::Schedule;[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+
+[0m[1m[38;5;9merror[E0433][0m[0m[1m[38;5;15m: failed to resolve: use of undeclared type `Schedule`[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:308:26[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m3[0m[0m [0m[0m[1m[38;5;14m| [0m[0mlet schedule: Schedule = Schedule::builer().new()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m                         [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14mhelp[0m[0m: consider importing this struct[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m2[0m[0m [0m[0m[1m[38;5;14m| [0m[0m[38;5;10muse planif::schedule::Schedule;[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to 2 previous errors[0m
+
+[0m[1m[38;5;15mSome errors have detailed explanations: E0412, E0433.[0m
+[0m[1m[38;5;15mFor more information about an error, try `rustc --explain E0412`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_boot (line 90) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_boot` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:95:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_boot();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_idle (line 146) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_idle` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:151:10[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m        .create_idle();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m         [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_time (line 233) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_time` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:238:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_time();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_event (line 127) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_event` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:132:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_event();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_monthly_dow (line 198) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly_dow` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:203:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly_dow();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_monthly (line 181) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:186:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_registration (line 215) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_registration` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:220:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_registration();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_weekly (line 252) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_weekly` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:257:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_weekly();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_daily (line 108) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:113:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::new (line 45) stdout ----
+[0m[1m[38;5;9merror[E0308][0m[0m[1m[38;5;15m: mismatched types[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:49:26[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m7[0m[0m [0m[0m[1m[38;5;14m| [0m[0mlet schedule: Schedule = ScheduleBuilder::new();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m              [0m[0m[1m[38;5;14m--------[0m[0m   [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mexpected struct `Schedule`, found enum `Result`[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m              [0m[0m[1m[38;5;14m|[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m              [0m[0m[1m[38;5;14mexpected due to this[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m  [0m[0m[1m[38;5;14m= [0m[0m[1m[38;5;15mnote[0m[0m: expected struct `[0m[0m[1mSchedule[0m[0m`[0m
+[0m               found enum `[0m[0m[1mResult<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>[0m[0m`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0308`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Boot>::delay (line 611) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_boot` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:616:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_boot()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Boot>::trigger (line 584) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_boot` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:589:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_boot()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::random_delay (line 691) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:696:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::days_interval (line 664) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:669:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Event>::trigger (line 765) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_event` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:770:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_event()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\settings.rs - settings::Settings (line 90) stdout ----
+[0m[1m[38;5;9merror[E0433][0m[0m[1m[38;5;15m: failed to resolve: use of undeclared crate or module `settings`[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\settings.rs:92:16[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m4[0m[0m [0m[0m[1m[38;5;14m| [0m[0mlet settings = settings::new();[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m               [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m [0m[0m[1m[38;5;9muse of undeclared crate or module `settings`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0433`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Event>::delay (line 721) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_event` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:726:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_event()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::end_boundary (line 432) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:437:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::execution_time_limit (line 363) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:368:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::repetition (line 487) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:492:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::trigger (line 641) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:646:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::description (line 327) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:332:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::start_boundary (line 400) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:405:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::delay (line 866) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_logon` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:871:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_logon()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::trigger (line 840) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_logon` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:845:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_logon()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::user_id (line 897) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_logon` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:902:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_logon()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Idle>::trigger (line 816) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_idle` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:821:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_idle()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::months_of_year (line 967) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:973:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m9[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::days_of_months (line 923) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:929:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m9[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::random_delay (line 998) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1003:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::run_on_last_day (line 1024) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1029:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::trigger (line 1049) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1054:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::days_of_week (line 1072) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly_dow` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1078:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m9[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly_dow()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::months_of_year (line 1099) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly_dow` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1105:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m9[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly_dow()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::random_delay (line 1131) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly_dow` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1136:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly_dow()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::run_on_last_week (line 1158) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly_dow` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1163:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly_dow()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::trigger (line 1215) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly_dow` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1220:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly_dow()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::weeks_of_month (line 1184) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_monthly_dow` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1190:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m9[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_monthly_dow()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Registration>::delay (line 1241) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_registration` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1246:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_registration()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Registration>::trigger (line 1267) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_registration` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1272:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_registration()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Time>::random_delay (line 1323) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_time` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1328:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_time()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Time>::trigger (line 1296) stdout ----
+[0m[1m[38;5;9merror[E0252][0m[0m[1m[38;5;15m: the name `ScheduleBuilder` is defined multiple times[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1299:5[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m5[0m[0m [0m[0m[1m[38;5;14m| [0m[0muse planif::schedule_builder::ScheduleBuilder;[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m    [0m[0m[1m[38;5;14m-----------------------------------------[0m[0m [0m[0m[1m[38;5;14mprevious import of the type `ScheduleBuilder` here[0m
+[0m[1m[38;5;14m6[0m[0m [0m[0m[1m[38;5;14m| [0m[0muse planif::schedule_builder::ScheduleBuilder;[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m    [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9m`ScheduleBuilder` reimported here[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m  [0m[0m[1m[38;5;14m= [0m[0m[1m[38;5;15mnote[0m[0m: `ScheduleBuilder` must be defined only once in the type namespace of this block[0m
+
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_time` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1302:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m9[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_time()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to 2 previous errors[0m
+
+[0m[1m[38;5;15mSome errors have detailed explanations: E0252, E0599.[0m
+[0m[1m[38;5;15mFor more information about an error, try `rustc --explain E0252`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::random_delay (line 1430) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1436:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m9[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::days_of_week (line 1374) stdout ----
+[0m[1m[38;5;9merror[E0412][0m[0m[1m[38;5;15m: cannot find type `Schedule` in this scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1378:15[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m7[0m[0m [0m[0m[1m[38;5;14m| [0m[0mlet schedule: Schedule = ScheduleBuilder::new()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m              [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in this scope[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14mhelp[0m[0m: consider importing this struct[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m2[0m[0m [0m[0m[1m[38;5;14m| [0m[0m[38;5;10muse planif::schedule::Schedule;[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1379:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to 2 previous errors[0m
+
+[0m[1m[38;5;15mSome errors have detailed explanations: E0412, E0599.[0m
+[0m[1m[38;5;15mFor more information about an error, try `rustc --explain E0412`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::trigger (line 1351) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_weekly` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1356:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m8[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_weekly()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+---- src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::weeks_interval (line 1401) stdout ----
+[0m[1m[38;5;9merror[E0599][0m[0m[1m[38;5;15m: no method named `create_daily` found for enum `Result` in the current scope[0m
+[0m [0m[0m[1m[38;5;14m--> [0m[0msrc\schedule_builder.rs:1407:6[0m
+[0m  [0m[0m[1m[38;5;14m|[0m
+[0m[1m[38;5;14m9[0m[0m [0m[0m[1m[38;5;14m| [0m[0m    .create_daily()[0m
+[0m  [0m[0m[1m[38;5;14m| [0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mmethod not found in `Result<ScheduleBuilder, Box<(dyn std::error::Error + 'static)>>`[0m
+
+[0m[1m[38;5;9merror[0m[0m[1m[38;5;15m: aborting due to previous error[0m
+
+[0m[1m[38;5;15mFor more information about this error, try `rustc --explain E0599`.[0m
+Couldn't compile the test.
+
+failures:
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_boot (line 90)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_daily (line 108)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_event (line 127)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_idle (line 146)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_logon (line 164)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_monthly (line 181)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_monthly_dow (line 198)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_registration (line 215)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_time (line 233)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::create_weekly (line 252)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Base>::new (line 45)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Boot>::delay (line 611)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Boot>::trigger (line 584)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::days_interval (line 664)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::random_delay (line 691)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Daily>::trigger (line 641)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Event>::delay (line 721)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Event>::trigger (line 765)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::author (line 288)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::build (line 307)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::description (line 327)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::end_boundary (line 432)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::execution_time_limit (line 363)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::principal (line 526)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::repetition (line 487)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Frequency>::start_boundary (line 400)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Idle>::trigger (line 816)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::delay (line 866)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::trigger (line 840)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Logon>::user_id (line 897)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::days_of_months (line 923)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::months_of_year (line 967)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::random_delay (line 998)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::run_on_last_day (line 1024)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Monthly>::trigger (line 1049)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::days_of_week (line 1072)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::months_of_year (line 1099)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::random_delay (line 1131)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::run_on_last_week (line 1158)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::trigger (line 1215)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<MonthlyDOW>::weeks_of_month (line 1184)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Registration>::delay (line 1241)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Registration>::trigger (line 1267)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Time>::random_delay (line 1323)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Time>::trigger (line 1296)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::days_of_week (line 1374)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::random_delay (line 1430)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::trigger (line 1351)
+    src\schedule_builder.rs - schedule_builder::ScheduleBuilder<Weekly>::weeks_interval (line 1401)
+    src\settings.rs - settings::Settings (line 90)
+
+test result: FAILED. 0 passed; 50 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.31s
+

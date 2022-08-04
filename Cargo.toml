@@ -26,3 +26,6 @@ features = [
     "Win32_System_Com",
     "Win32_System_Ole",
 ]
+
+[package.metadata.docs.rs]
+default-target = "x86_64-pc-windows-msvc"
