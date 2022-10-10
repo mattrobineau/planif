@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2022-10-09
+
+### Added
+* Add builder function for a task's settings
+* Add `NetworkSettings` (removed from `Settings`)
+* Add `IdleSettings` (also removed from `Settings`)
+
 ## [0.1.1] - 2022-08-04
 
 ### Added

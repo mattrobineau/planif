@@ -1,3 +1,67 @@
+/// Defines idle settings on a task
+/// # Example
+/// ```
+/// use planif::settings::Settings;
+/// // All values are set to `None` when using `new()`
+/// let mut settings = Settings::new();
+/// settings.idle_settings = Some(IdleSettings::new());
+/// ```
+///
+/// # Properties
+/// ## idle_duration
+/// This field is deprecated.
+/// Gets or sets a String that indicates the amount of time that the computer must be in an idle state before
+/// the task is run.
+///
+/// A value that indicates the amount of time that the computer must be in an idle state before the task
+/// is run). The format for this string is PnYnMnDTnHnMnS, where nY is the number of years, nM is the number
+/// of months, nD is the number of days, 'T' is the date/time separator, nH is the number of hours,
+/// nM is the number of minutes, and nS is the number of seconds (for example, PT5M specifies 5 minutes
+/// and P1M4DT2H5M specifies one month, four days, two hours, and five minutes). The minimum value is
+/// one minute.
+///
+/// ## restart_on_idle
+/// Gets or sets a Boolean value that indicates whether the task is restarted when the computer cycles into an idle
+/// condition more than once.
+///
+///
+/// ## stop_on_idle_end
+/// Gets or sets a Boolean value that indicates that the Task Scheduler will terminate the task if the
+/// idle condition ends before the task is completed.
+///
+/// ## wait_timeout
+/// This field is deprecated.
+/// Get or sets a String that indicates the amount of time that the Task Scheduler will wait for an idle
+/// condition to occur.
+///
+/// If a task is triggered by an idle trigger, then the `wait_timeout` property is ignored.
+///
+/// The format for this String is PnYnMnDTnHnMnS, where nY is the number of years, nM is the number of months,
+/// nD is the number of days, 'T' is the date/time separator, nH is the number of hours, nM is the number
+/// of minutes, and nS is the number of seconds (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies
+/// one month, four days, two hours, and five minutes). The minimum time allowed is 1 minute.
+#[allow(deprecated)]
+pub struct IdleSettings {
+    #[deprecated]
+    pub idle_duration: Option<String>,
+    pub restart_on_idle: Option<bool>,
+    pub stop_on_idle_end: Option<bool>,
+    #[deprecated]
+    pub wait_timeout: Option<String>,
+}
+
+#[allow(deprecated)]
+impl IdleSettings {
+    pub fn new() -> IdleSettings {
+        IdleSettings {
+            idle_duration: None,
+            restart_on_idle: None,
+            stop_on_idle_end: None,
+            wait_timeout: None,
+        }
+    }
+}
+
 /// Values for the security logon method.
 ///
 /// # None
@@ -34,6 +98,19 @@ pub enum LogonType {
     Group,
     ServiceAccount,
     InteractiveTokenOrPassword,
+}
+
+/// Use to set a network profile identifier and name.
+/// # Properties
+///
+/// ## id
+/// GUID value that identifies a network profile.
+///
+/// ## Name
+/// The name of a network profile. The name is used for display purposes.
+pub struct NetworkSettings {
+    pub id: String,
+    pub name: String,
 }
 
 /// Use to set the settings for the principal
@@ -129,18 +206,14 @@ pub enum RunLevel {
 /// Gets or sets a Boolean value that indicates that the task will not be visible in the UI. However, administrators
 /// can override this setting through the use of a "master switch" that makes all tasks visible in the UI.
 ///
-/// ## restart_on_idle
-/// Gets or sets a Boolean value that indicates whether the task is restarted when the computer cycles into an idle
-/// condition more than once.
-///
 /// ## multiple_instances_policy
 /// Gets or sets the policy that defines how the Task Scheduler deals with multiple instances of the task.
 ///
-/// ## network_id
-/// Gets or sets a GUID value that identifies a network profile.
-///
-/// ## network_name
-/// Gets or sets the name of a network profile. The name is used for display purposes.
+/// ## network_settings
+/// The network settings object that contains a network profile identifier and name.
+/// If the `run_only_if_network_available` property is true and a network profile is specified
+/// in the `network_settings` field, then the task will run only if the specified network
+/// profile is available.
 ///
 /// ## priority
 /// Gets or sets the priority level of the task.
@@ -167,10 +240,6 @@ pub enum RunLevel {
 /// Gets or sets a Boolean value that indicates that the task will be stopped if the computer begins to
 /// run on battery power.
 ///
-/// ## stop_on_idle_end
-/// Gets or sets a Boolean value that indicates that the Task Scheduler will terminate the task if the
-/// idle condition ends before the task is completed.
-///
 /// ## wake_to_run
 /// Gets or sets a Boolean value that indicates that the Task Scheduler will wake the computer when it is
 /// time to run the task.
@@ -184,7 +253,6 @@ pub enum RunLevel {
 /// <https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities>
 /// <https://docs.microsoft.com/en-us/windows/win32/taskschd/networksettings>
 /// <https://docs.microsoft.com/en-us/windows/win32/taskschd/idlesettings>
-
 pub struct Settings {
     pub allow_demand_start: Option<bool>,
     pub allow_hard_terminate: Option<bool>,
@@ -194,10 +262,9 @@ pub struct Settings {
     pub enabled: Option<bool>,
     pub execution_time_limit: Option<String>,
     pub hidden: Option<bool>,
-    pub restart_on_idle: Option<bool>,
+    pub idle_settings: Option<IdleSettings>,
     pub multiple_instances_policy: Option<InstancesPolicy>,
-    pub network_id: Option<String>,
-    pub network_name: Option<String>,
+    pub network_settings: Option<NetworkSettings>,
     pub priority: Option<i32>,
     pub restart_count: Option<i32>,
     pub restart_interval: Option<String>,
@@ -205,7 +272,6 @@ pub struct Settings {
     pub run_only_if_network_available: Option<bool>,
     pub start_when_available: Option<bool>,
     pub stop_if_going_on_batteries: Option<bool>,
-    pub stop_on_idle_end: Option<bool>,
     pub wake_to_run: Option<bool>,
     pub xml_text: Option<String>,
 }
@@ -221,11 +287,9 @@ impl Settings {
             enabled: None,
             execution_time_limit: None,
             hidden: None,
-            restart_on_idle: None,
-            stop_on_idle_end: None,
+            idle_settings: None,
             multiple_instances_policy: None,
-            network_id: None,
-            network_name: None,
+            network_settings: None,
             priority: None,
             restart_count: None,
             restart_interval: None,
@@ -254,10 +318,24 @@ pub enum Compatibility {
     V2,
 }
 
+use windows::Win32::System::TaskScheduler::TASK_COMPATIBILITY;
+impl From<Compatibility> for TASK_COMPATIBILITY {
+    fn from(item: Compatibility) -> Self {
+        TASK_COMPATIBILITY(item as i32)
+    }
+}
+
 /// Values for the instance policy.
 pub enum InstancesPolicy {
     Parallel = 0,
     Queue,
     IgnoreNew,
     StopExisting,
+}
+
+use windows::Win32::System::TaskScheduler::TASK_INSTANCES_POLICY;
+impl From<InstancesPolicy> for TASK_INSTANCES_POLICY {
+    fn from(item: InstancesPolicy) -> Self {
+        TASK_INSTANCES_POLICY(item as i32)
+    }
 }

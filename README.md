@@ -1,10 +1,10 @@
 `planif` is a builder pattern wrapper around the windows task scheduler API ([windows-rs](https://github.com/microsoft/windows-rs)).
 
-## How to
-Please refer to the `examples` folder. The folder contains code for creating each of the triggers.
+## Functionality
 
-## TODO
-### Create Triggers
+The `planif` crate provides an ergonomic builder over top of the Win32 Task Scheduler API.
+
+The builder supports the following trigger types:
 - [x] Boot 
 - [x] Daily 
 - [X] Event 
@@ -16,15 +16,43 @@ Please refer to the `examples` folder. The folder contains code for creating eac
 - [x] Time 
 - [x] Weekly 
 
-### Trigger settings
-- [ ] IdleSettings 
+## Usage
+Add this to your `Cargo.toml` file:
+```
+[dependencies]
+planif = "0.2"
+```
 
-Other settings may also be missing.
+## Example
 
-### Other (maybe)
-- [ ] Delete triggers
-- [ ] List triggers
+```rust
+use chrono::prelude::*;
+use planif::schedule::TaskCreationFlags;
+use planif::schedule_builder::{Action, ScheduleBuilder};
 
-## A builder library for the Windows Task Scheduler.
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let sb = ScheduleBuilder::new().unwrap();
+    sb.create_daily()
+        .author("Matt")?
+        .description("Test Trigger")?
+        .trigger("test_trigger", true)?
+        .days_interval(1)?
+        .action(Action::new("test", "notepad.exe", "", ""))?
+        .start_boundary(&Local::now().to_rfc3339())?
+        .build()?
+        .register("TaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
+    Ok(())
+}
+```
 
-Inspired by the great work of [j-hc](https://github.com/j-hc/windows-taskscheduler-api-rust) which allowed my to figure out how to grok the windows-rs library.
+For more examples, refer to the `planif/examples` folder. The folder contains code for creating each of the triggers.
+
+
+## Trigger settings
+All settings are available for the tasks.
+
+The documentation contains all relevant information from the
+[Microsoft Task Scheduler documentation](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-reference).
+
+## Changelog
+See the [changelog file](CHANGELOG.md).

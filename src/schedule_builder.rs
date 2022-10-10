@@ -2,7 +2,7 @@ use crate::{
     enums::{DayOfMonth, DayOfWeek, Month, WeekOfMonth},
     error::{InvalidOperationError, RequiredPropertyError},
     schedule::Schedule,
-    settings::PrincipalSettings,
+    settings::{PrincipalSettings, Settings},
 };
 use windows::core::Interface;
 use windows::Win32::Foundation::BSTR;
@@ -12,7 +12,7 @@ use windows::Win32::System::Com::{
 };
 use windows::Win32::System::TaskScheduler::{
     IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IExecAction,
-    IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, IPrincipal,
+    IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, INetworkSettings, IPrincipal,
     IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskService,
     ITaskSettings, ITimeTrigger, ITriggerCollection, IWeeklyTrigger, TaskScheduler,
     TASK_ACTION_EXEC, TASK_LOGON_TYPE, TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT, TASK_TRIGGER_DAILY,
@@ -568,8 +568,142 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             principal.SetId(settings.id)?;
             principal.SetLogonType(TASK_LOGON_TYPE(settings.logon_type as i32))?;
             principal.SetRunLevel(TASK_RUNLEVEL_TYPE(settings.run_level as i32))?;
+            self.schedule.task_definition.SetPrincipal(principal)?;
             Ok(self)
         }
+    }
+
+    /// Sets the Task's settings.
+    /// # Example
+    /// ```
+    /// use planif::settings::{ Settings };
+    /// use planif::schedule::Schedule;
+    /// use planif::schedule_builder::ScheduleBuilder;
+    ///
+    /// let settings = Settings::new();
+    /// settings.allow_demand_start = Some(true);
+    ///
+    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    ///     .create_daily()
+    ///     .trigger("DailyTrigger", true).unwrap()
+    ///     .description("This is my trigger").unwrap()
+    ///     .principal(settings).unwrap()
+    ///     .build()
+    ///     .settings(settings)
+    ///     .unwrap();
+    /// ```
+    pub fn settings(self, settings: Settings) -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            let task_settings: ITaskSettings = self.schedule.task_definition.Settings()?;
+            // Handle idle settings
+            if let Some(s) = settings.idle_settings {
+                let idle_settings = task_settings.IdleSettings()?;
+
+                #[allow(deprecated)]
+                if let Some(setting) = s.idle_duration {
+                    idle_settings.SetIdleDuration(setting)?;
+                }
+
+                if let Some(setting) = s.restart_on_idle {
+                    idle_settings.SetRestartOnIdle(setting.into())?;
+                }
+
+                if let Some(setting) = s.stop_on_idle_end {
+                    idle_settings.SetStopOnIdleEnd(setting.into())?;
+                }
+
+                #[allow(deprecated)]
+                if let Some(setting) = s.wait_timeout {
+                    idle_settings.SetWaitTimeout(setting)?;
+                }
+
+                task_settings.SetIdleSettings(idle_settings)?;
+            }
+
+            // Handle Network Settings
+            if let Some(s) = settings.network_settings {
+                let network_settings: INetworkSettings = task_settings.NetworkSettings()?;
+                network_settings.SetId(s.id)?;
+                network_settings.SetName(s.name)?;
+                task_settings.SetNetworkSettings(network_settings)?;
+            }
+
+            // Handle settings
+            if let Some(s) = settings.allow_demand_start {
+                task_settings.SetAllowDemandStart(s.into())?;
+            }
+
+            if let Some(s) = settings.allow_hard_terminate {
+                task_settings.SetAllowHardTerminate(s.into())?;
+            }
+
+            if let Some(s) = settings.compatibility {
+                task_settings.SetCompatibility(s.into())?;
+            }
+
+            if let Some(s) = settings.delete_expired_task_after {
+                task_settings.SetDeleteExpiredTaskAfter(s)?;
+            }
+
+            if let Some(s) = settings.disallow_start_if_on_batteries {
+                task_settings.SetDisallowStartIfOnBatteries(s.into())?;
+            }
+
+            if let Some(s) = settings.enabled {
+                task_settings.SetEnabled(s.into())?;
+            }
+
+            if let Some(s) = settings.execution_time_limit {
+                task_settings.SetExecutionTimeLimit(s)?;
+            }
+
+            if let Some(s) = settings.hidden {
+                task_settings.SetHidden(s.into())?;
+            }
+
+            if let Some(s) = settings.multiple_instances_policy {
+                task_settings.SetMultipleInstances(s.into())?;
+            }
+
+            if let Some(s) = settings.priority {
+                task_settings.SetPriority(s)?;
+            }
+
+            if let Some(s) = settings.restart_count {
+                task_settings.SetRestartCount(s)?;
+            }
+
+            if let Some(s) = settings.restart_interval {
+                task_settings.SetRestartInterval(s)?;
+            }
+
+            if let Some(s) = settings.run_only_if_idle {
+                task_settings.SetRunOnlyIfIdle(s.into())?;
+            }
+
+            if let Some(s) = settings.run_only_if_network_available {
+                task_settings.SetRunOnlyIfNetworkAvailable(s.into())?;
+            }
+
+            if let Some(s) = settings.start_when_available {
+                task_settings.SetStartWhenAvailable(s.into())?;
+            }
+
+            if let Some(s) = settings.stop_if_going_on_batteries {
+                task_settings.SetStopIfGoingOnBatteries(s.into())?;
+            }
+
+            if let Some(s) = settings.wake_to_run {
+                task_settings.SetWakeToRun(s.into())?;
+            }
+
+            if let Some(s) = settings.xml_text {
+                task_settings.SetXmlText(s)?;
+            }
+
+            self.schedule.task_definition.SetSettings(task_settings)?;
+        }
+        Ok(self)
     }
 }
 
