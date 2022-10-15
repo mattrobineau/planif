@@ -1,3 +1,4 @@
+//#![deny(missing_docs)]
 pub mod enums;
 pub mod error;
 pub mod schedule;

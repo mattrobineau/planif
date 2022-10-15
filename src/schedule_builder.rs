@@ -1578,6 +1578,8 @@ pub struct Action {
 }
 
 impl Action {
+    /// The work items performed by a task are called actions. A task can have a single action 
+    /// or a maximum of 32 actions. Be aware that when multiple actions are specified, they are executed sequentially.
     pub fn new(id: &str, path: &str, working_dir: &str, args: &str) -> Self {
         Self {
             id: id.into(),
