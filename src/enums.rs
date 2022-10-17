@@ -74,6 +74,35 @@ impl From<Month> for i16 {
     }
 }
 
+/// Task Creation constants  
+/// see <https://docs.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_creation>
+#[derive(Debug, PartialEq)]
+pub enum TaskCreationFlags {
+    /// The Task Scheduler service registers the task as a new task.
+    Create = 2,
+    /// The Task Scheduler service either registers the task as a new task or as an updated version 
+    /// if the task already exists. Equivalent to `TaskCreationFlags.Create | TaskCreationFlags.Update`
+    CreateOrUpdate = 6,
+    /// The Task Scheduler service registers the disabled task. A disabled task cannot run until it is enabled.
+    Disable = 8,
+    /// The Task Scheduler service is prevented from adding the allow access-control entry (ACE) 
+    /// for the context principal. When the [register method](crate::schedule::Schedule::register) function is called with this flag to
+    /// update a task, the Task Scheduler service does not add the ACE for the new context principal
+    /// and does not remove the ACE from the old context principal.
+    DontAddPrincipalAce = 10,
+    /// The Task Scheduler service creates the task, but ignores the registration triggers in the task.
+    /// By ignoring the registration triggers, the task will not execute when it is registered
+    /// unless a time-based trigger causes it to execute on registration.
+    IgnoreRegistrationTriggers = 20,
+    /// The Task Scheduler service registers the task as an updated version of an existing task.
+    /// When a task with a registration trigger is updated, the task will execute after the update occurs.
+    Update = 4,
+    /// The Task Scheduler service checks the syntax of the XML that describes the task but does not
+    /// register the task. This constant cannot be combined with the [Create](TaskCreationFlags::Create),
+    /// [Update](TaskCreationFlags::Update), or [CreateOrUpdate](TaskCreationFlags::CreateOrUpdate) values.
+    ValidateOnly = 1,
+}
+
 #[derive(Debug, Clone, Copy)]
 /// The week of the month
 pub enum WeekOfMonth {

@@ -63,14 +63,14 @@ pub enum LogonType {
     S4U,
     /// User must already be logged on. The task will be run only in an existing interactive session.
     InteractiveToken,
-    /// Group activation. The user_id field specifies the group.
+    /// Group activation. The [user_id](PrincipalSettings::user_id) field specifies the group.
     Group,
     /// Indicates that a Local System, Local Service, or Network Service account is being used as a security context
     /// to run the task.
     ServiceAccount,
     /// First use the interactive token. If the user is not logged on (no interactive token is available), then the password
     /// is used. The password must be specified when a task is registered. This flag is not recommended for new tasks because
-    /// it is less reliable than LogonType::Password.
+    /// it is less reliable than [LogonType::Password](LogonType::Password).
     InteractiveTokenOrPassword,
 }
 
@@ -89,18 +89,18 @@ pub struct PrincipalSettings {
     /// Gets or sets the name of the principal that is displayed in the Task Scheduler UI.
     pub display_name: String,
     /// Gets or sets the identifier of the user group that is required to run the tasks that are associated with the principal.
-    /// Do not set this property if a user identifier is specified in the user_id property.
+    /// Do not set this property if a user identifier is specified in the [user_id](PrincipalSettings::user_id) property.
     pub group_id: Option<String>,
     /// Gets or sets the identifier of the principal.
     pub id: String,
     /// Gets or sets the security logon method that is required to run the tasks that are associated with the principal.
-    /// This property is valid only when a user identifier is specified by the UserId property.
+    /// This property is valid only when a user identifier is specified by the [user_id](PrincipalSettings::user_id) property.
     pub logon_type: LogonType,
     /// Gets or sets the identifier that is used to specify the privilege level that is required to run the tasks
     /// that are associated with the principal.
     pub run_level: RunLevel,
     /// Gets or sets the user identifier that is required to run the tasks that are associated with the principal.
-    /// Do not set this property if a group identifier is specified in the group_id property.
+    /// Do not set this property if a group identifier is specified in the [group_id](PrincipalSettings::group_id) property.
     pub user_id: Option<String>,
 }
 
@@ -124,11 +124,11 @@ pub enum RunLevel {
 /// ```
 ///
 /// # References
-/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings>
-/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-priority>
-/// <https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities>
-/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/networksettings>
-/// <https://docs.microsoft.com/en-us/windows/win32/taskschd/idlesettings>
+/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings> 
+/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-priority> 
+/// - <https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities> 
+/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/networksettings> 
+/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/idlesettings> 
 pub struct Settings {
     /// Gets or sets a Boolean value that indicates that the task can be started by using either the Run command
     /// or the Context menu.
@@ -161,9 +161,9 @@ pub struct Settings {
     /// Gets or sets the policy that defines how the Task Scheduler deals with multiple instances of the task.
     pub multiple_instances_policy: Option<InstancesPolicy>,
     /// The network settings object that contains a network profile identifier and name.
-    /// If the `run_only_if_network_available` property is true and a network profile is specified
-    /// in the `network_settings` field, then the task will run only if the specified network
-    /// profile is available.
+    /// If the `run_only_if_network_available` property is true and
+    /// a network profile is specified in the [network_settings](Settings::network_settings)
+    /// field, then the task will run only if the specified network profile is available.
     pub network_settings: Option<NetworkSettings>,
     /// Gets or sets the priority level of the task.
     pub priority: Option<i32>,
@@ -218,8 +218,8 @@ impl Settings {
     }
 }
 
-/// Values for task compatibility
-/// Task compatibility, which is set through the Compatibility property, should only be set to TASK_COMPATIBILITY_V1
+/// Values for task compatibility  
+/// Task compatibility, which is set through the Compatibility property, should only be set to `Compatibility.V1`
 /// if a task needs to be accessed or modified from a Windows XP, Windows Server 2003, or Windows 2000 computer.
 /// Otherwise, it is recommended that Task Scheduler 2.0 compatibility be used because the task will have more features.
 /// Tasks compatible with the AT command can only have one time trigger.
@@ -236,7 +236,7 @@ pub enum Compatibility {
     V2,
 }
 
-use windows::Win32::System::TaskScheduler::TASK_COMPATIBILITY;
+pub(crate) use windows::Win32::System::TaskScheduler::TASK_COMPATIBILITY;
 impl From<Compatibility> for TASK_COMPATIBILITY {
     fn from(item: Compatibility) -> Self {
         TASK_COMPATIBILITY(item as i32)
@@ -255,7 +255,7 @@ pub enum InstancesPolicy {
     StopExisting,
 }
 
-use windows::Win32::System::TaskScheduler::TASK_INSTANCES_POLICY;
+pub(crate) use windows::Win32::System::TaskScheduler::TASK_INSTANCES_POLICY;
 impl From<InstancesPolicy> for TASK_INSTANCES_POLICY {
     fn from(item: InstancesPolicy) -> Self {
         TASK_INSTANCES_POLICY(item as i32)

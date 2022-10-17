@@ -21,19 +21,31 @@ use windows::Win32::System::TaskScheduler::{
 };
 
 /* triggers */
+/// Marker type for base [`ScheduleBuilder<Base>`]
 pub struct Base {}
+/// Marker type for boot [`ScheduleBuilder<Boot>`]
 pub struct Boot {}
+/// Marker type for a daily [`ScheduleBuilder<Daily>`]
 pub struct Daily {}
+/// Marker type for an event [`ScheduleBuilder<Event>`]
 pub struct Event {}
+/// Marker type for an idle [`ScheduleBuilder<Idle>`]
 pub struct Idle {}
+/// Marker type for a logon [`ScheduleBuilder<Logon>`]
 pub struct Logon {}
+/// Marker type for a monthly [`ScheduleBuilder<Monthly>`]
 pub struct Monthly {}
+/// Marker type for a monthly day of week [`ScheduleBuilder<MonthlyDOW>`]
 pub struct MonthlyDOW {}
+/// Marker type for registration [`ScheduleBuilder<Registration>`]
 pub struct Registration {}
+/// Marker type for a time [`ScheduleBuilder<Time>`]
 pub struct Time {}
+/// Marker type for a weekly [`ScheduleBuilder<Weekly>`]
 pub struct Weekly {}
 
 #[derive(Debug)]
+#[doc(hidden)]
 pub struct ScheduleBuilder<Frequency = Base> {
     pub(crate) frequency: std::marker::PhantomData<Frequency>,
     pub(crate) schedule: Schedule,
@@ -1568,7 +1580,8 @@ fn trigger_uninitialised_error() -> Box<dyn std::error::Error> {
 }
 
 /* actions */
-
+/// `Action`s defines the action a scheduled task will take.
+/// Currently, only exec actions are support.
 #[derive(Debug, Clone)]
 pub struct Action {
     id: BSTR,
