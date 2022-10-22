@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+* Add `Duration` struct to ease usage of delays and other methods using string duration formats
+* Added tests for `Duration` to_string() impl
+
 ## [0.2.1]
 ### Updated
 * Update documentation, add deny missing_docs

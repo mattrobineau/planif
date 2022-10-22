@@ -1,3 +1,30 @@
+use std::fmt;
+
+/// Values for task compatibility  
+/// Task compatibility, which is set through the Compatibility property, should only be set to `Compatibility.V1`
+/// if a task needs to be accessed or modified from a Windows XP, Windows Server 2003, or Windows 2000 computer.
+/// Otherwise, it is recommended that Task Scheduler 2.0 compatibility be used because the task will have more features.
+/// Tasks compatible with the AT command can only have one time trigger.
+/// Tasks compatible with Task Scheduler 1.0 can only have a time trigger, a logon trigger, or a boot trigger, and the
+/// task can only have an executable action.
+///
+/// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-compatibility>
+pub enum Compatibility {
+    /// The task is compatible with the AT command.
+    AT = 0,
+    /// The task is compatible with Task Scheduler 1.0.
+    V1,
+    /// The task is compatible with Task Scheduler 2.0.
+    V2,
+}
+
+pub(crate) use windows::Win32::System::TaskScheduler::TASK_COMPATIBILITY;
+impl From<Compatibility> for TASK_COMPATIBILITY {
+    fn from(item: Compatibility) -> Self {
+        TASK_COMPATIBILITY(item as i32)
+    }
+}
+
 /// Defines idle settings on a task
 /// # Example
 /// ```
@@ -48,6 +75,25 @@ impl IdleSettings {
             stop_on_idle_end: None,
             wait_timeout: None,
         }
+    }
+}
+
+/// Values for the instance policy.
+pub enum InstancesPolicy {
+    /// Starts a new instance while an existing instance of the task is running.
+    Parallel = 0,
+    /// Starts a new instance of the task after all other instances of the task are complete.
+    Queue,
+    /// Does not start a new instance if an existing instance of the task is running.
+    IgnoreNew,
+    /// Stops an existing instance of the task before it starts new instance.
+    StopExisting,
+}
+
+pub(crate) use windows::Win32::System::TaskScheduler::TASK_INSTANCES_POLICY;
+impl From<InstancesPolicy> for TASK_INSTANCES_POLICY {
+    fn from(item: InstancesPolicy) -> Self {
+        TASK_INSTANCES_POLICY(item as i32)
     }
 }
 
@@ -124,11 +170,11 @@ pub enum RunLevel {
 /// ```
 ///
 /// # References
-/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings> 
-/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-priority> 
-/// - <https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities> 
-/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/networksettings> 
-/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/idlesettings> 
+/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings>
+/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-priority>
+/// - <https://docs.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities>
+/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/networksettings>
+/// - <https://docs.microsoft.com/en-us/windows/win32/taskschd/idlesettings>
 pub struct Settings {
     /// Gets or sets a Boolean value that indicates that the task can be started by using either the Run command
     /// or the Context menu.
@@ -218,46 +264,105 @@ impl Settings {
     }
 }
 
-/// Values for task compatibility  
-/// Task compatibility, which is set through the Compatibility property, should only be set to `Compatibility.V1`
-/// if a task needs to be accessed or modified from a Windows XP, Windows Server 2003, or Windows 2000 computer.
-/// Otherwise, it is recommended that Task Scheduler 2.0 compatibility be used because the task will have more features.
-/// Tasks compatible with the AT command can only have one time trigger.
-/// Tasks compatible with Task Scheduler 1.0 can only have a time trigger, a logon trigger, or a boot trigger, and the
-/// task can only have an executable action.
-///
-/// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/tasksettings-compatibility>
-pub enum Compatibility {
-    /// The task is compatible with the AT command.
-    AT = 0,
-    /// The task is compatible with Task Scheduler 1.0.
-    V1,
-    /// The task is compatible with Task Scheduler 2.0.
-    V2,
+/// Represents a duration of time.
+#[derive(Debug, Clone, Copy)]
+#[allow(missing_docs)]
+pub struct Duration {
+    pub days: Option<usize>,
+    pub hours: Option<usize>,
+    pub minutes: Option<usize>,
+    pub months: Option<usize>,
+    pub seconds: Option<usize>,
+    pub years: Option<usize>,
 }
 
-pub(crate) use windows::Win32::System::TaskScheduler::TASK_COMPATIBILITY;
-impl From<Compatibility> for TASK_COMPATIBILITY {
-    fn from(item: Compatibility) -> Self {
-        TASK_COMPATIBILITY(item as i32)
+impl Duration {
+    /// Creates a new instance of Duration with all values set to None.
+    pub fn new() -> Duration {
+        Duration {
+            days: None,
+            hours: None,
+            minutes: None,
+            months: None,
+            seconds: None,
+            years: None,
+        }
     }
 }
 
-/// Values for the instance policy.
-pub enum InstancesPolicy {
-    /// Starts a new instance while an existing instance of the task is running.
-    Parallel = 0,
-    /// Starts a new instance of the task after all other instances of the task are complete.
-    Queue,
-    /// Does not start a new instance if an existing instance of the task is running.
-    IgnoreNew,
-    /// Stops an existing instance of the task before it starts new instance.
-    StopExisting,
+macro_rules! format_duration {
+    ($str:expr, $num:expr, $code:literal) => {
+        if let Some(num) = $num {
+            if num > 0 {
+                $str = format!("{}{}{}", $str, num, $code);
+            }
+        }
+    };
 }
 
-pub(crate) use windows::Win32::System::TaskScheduler::TASK_INSTANCES_POLICY;
-impl From<InstancesPolicy> for TASK_INSTANCES_POLICY {
-    fn from(item: InstancesPolicy) -> Self {
-        TASK_INSTANCES_POLICY(item as i32)
+impl fmt::Display for Duration {
+    /// Formats a duration to a string similar to the duration of the ISO 8601 spec.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut s = String::new();
+
+        // The order of the string is very important. This is a requirement of the Task Scheduler
+        // API
+        format_duration!(s, self.years, "Y");
+        format_duration!(s, self.months, "M");
+        format_duration!(s, self.days, "D");
+
+        if self.hours.is_some() || self.minutes.is_some() || self.hours.is_some() {
+            s = format!("{}T", s);
+            format_duration!(s, self.hours, "H");
+            format_duration!(s, self.minutes, "M");
+            format_duration!(s, self.seconds, "S");
+        }
+
+        write!(f, "P{}", s)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn macro_test() {
+        let mut s = String::new();
+        format_duration!(s, Some(2), "Y");
+        format_duration!(s, Some(1), "D");
+        assert_eq!(s, "2Y1D");
+    }
+
+    #[test]
+    fn duration_all_set() {
+        let d = Duration {
+            years: Some(1),
+            months: Some(2),
+            days: Some(3),
+            hours: Some(4),
+            minutes: Some(5),
+            seconds: Some(6),
+        };
+
+        assert_eq!("P1Y2M3DT4H5M6S", d.to_string());
+    }
+
+    #[test]
+    fn duration_time_only() {
+        let mut d = Duration::new();
+        d.hours = Some(1);
+        d.minutes = Some(2);
+        d.seconds = Some(3);
+
+        assert_eq!("PT1H2M3S", d.to_string());
+    }
+    
+    #[test]
+    fn duration_zero_year_removed() {
+        let mut d = Duration::new();
+        d.years = Some(0);
+
+        assert_eq!("", d.to_string());
     }
 }
