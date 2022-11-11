@@ -2,8 +2,9 @@ use crate::{
     enums::{DayOfMonth, DayOfWeek, Month, WeekOfMonth},
     error::{InvalidOperationError, RequiredPropertyError},
     schedule::Schedule,
-    settings::{PrincipalSettings, Settings},
+    settings::{Duration, PrincipalSettings, Settings},
 };
+use std::rc::Rc;
 use windows::core::Interface;
 use windows::Win32::Foundation::BSTR;
 use windows::Win32::System::Com::VARIANT;
@@ -44,11 +45,47 @@ pub struct Time {}
 /// Marker type for a weekly [`ScheduleBuilder<Weekly>`]
 pub struct Weekly {}
 
+/// Creates a com runtime for reuse.
+#[derive(Debug, Clone)]
+pub struct ComRuntime {
+    com: Rc<Com>
+}
+
+impl ComRuntime {
+    /// Create a new ComRuntime (CoInitiliazeEx) which is passed to one or more [ScheduleBuilder]'s
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        let com = Com::initialize()?;
+        Ok(Self { com: Rc::new(com) })
+    }
+}
+
+#[derive(Debug)]
+#[doc(hidden)]
+pub(crate) struct Com;
+
+impl Com {
+    pub fn initialize() -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+        }
+        Ok(Com)
+    }
+}
+
+impl Drop for Com {
+    fn drop(&mut self) {
+        unsafe {
+            CoUninitialize();
+        }
+    }
+}
+
 #[derive(Debug)]
 #[doc(hidden)]
 pub struct ScheduleBuilder<Frequency = Base> {
     pub(crate) frequency: std::marker::PhantomData<Frequency>,
     pub(crate) schedule: Schedule,
+    com: ComRuntime,
 }
 
 impl ScheduleBuilder<Base> {
@@ -56,13 +93,12 @@ impl ScheduleBuilder<Base> {
     /// # Example
     /// ```
     /// use planif::schedule_builder::{ Base, ScheduleBuilder };
-    ///
+    /// let runtime = ComRuntime;
     /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new().unwrap();
     /// ```
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(com: ComRuntime) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
-            // On error of unsafe, CoUnintialize!
-            CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+            let sb_com = com.clone();
 
             let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
             task_service.Connect(
@@ -79,6 +115,7 @@ impl ScheduleBuilder<Base> {
             let settings: ITaskSettings = task_definition.Settings()?;
 
             Ok(Self {
+                com: sb_com,
                 frequency: std::marker::PhantomData::<Base>,
                 schedule: Schedule {
                     actions,
@@ -106,6 +143,7 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_boot(self) -> ScheduleBuilder<Boot> {
         ScheduleBuilder::<Boot> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Boot>,
             schedule: self.schedule,
         }
@@ -124,6 +162,7 @@ impl ScheduleBuilder<Base> {
     pub fn create_daily(mut self) -> ScheduleBuilder<Daily> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Daily> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Daily>,
             schedule: self.schedule,
         }
@@ -142,6 +181,7 @@ impl ScheduleBuilder<Base> {
     pub fn create_event(mut self) -> ScheduleBuilder<Event> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Event> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Event>,
             schedule: self.schedule,
         }
@@ -159,6 +199,7 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_idle(self) -> ScheduleBuilder<Idle> {
         ScheduleBuilder::<Idle> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Idle>,
             schedule: self.schedule,
         }
@@ -176,6 +217,7 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_logon(self) -> ScheduleBuilder<Logon> {
         ScheduleBuilder::<Logon> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Logon>,
             schedule: self.schedule,
         }
@@ -192,6 +234,7 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_monthly(self) -> ScheduleBuilder<Monthly> {
         ScheduleBuilder::<Monthly> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Monthly>,
             schedule: self.schedule,
         }
@@ -209,6 +252,7 @@ impl ScheduleBuilder<Base> {
     pub fn create_monthly_dow(mut self) -> ScheduleBuilder<MonthlyDOW> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<MonthlyDOW> {
+            com: self.com,
             frequency: std::marker::PhantomData::<MonthlyDOW>,
             schedule: self.schedule,
         }
@@ -225,6 +269,7 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_registration(self) -> ScheduleBuilder<Registration> {
         ScheduleBuilder::<Registration> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Registration>,
             schedule: self.schedule,
         }
@@ -243,6 +288,7 @@ impl ScheduleBuilder<Base> {
     pub fn create_time(mut self) -> ScheduleBuilder<Time> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Time> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Time>,
             schedule: self.schedule,
         }
@@ -260,6 +306,7 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_weekly(self) -> ScheduleBuilder<Weekly> {
         ScheduleBuilder::<Weekly> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Weekly>,
             schedule: self.schedule,
         }
@@ -357,15 +404,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         Ok(self)
     }
 
-    /// Closes the COM library on the current thread, unloads all DLLs loaded
-    /// by the thread, frees any other resources that the thread maintains, and
-    /// forces all RPC connections on the thread to close.
-    pub fn uninitialize(self) {
-        unsafe {
-            CoUninitialize();
-        }
-    }
-
     /// The amount of time that is allowed to complete the task.
     /// The format for this string is PnYnMnDTnHnMnS, where nY is the number of years,
     /// nM is the number of months, nD is the number of days, 'T' is the date/time separator,
@@ -395,7 +433,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -428,7 +465,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             self.schedule.force_start_boundary = false;
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -459,7 +495,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -522,7 +557,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -748,7 +782,6 @@ impl ScheduleBuilder<Boot> {
     }
 
     /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/logontrigger-delay>
     ///
@@ -759,17 +792,16 @@ impl ScheduleBuilder<Boot> {
     /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new().unwrap()
     ///     .create_boot()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .delay("P2DT5S").unwrap();
+    ///     .delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
     /// ```
-    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_boot_trigger: IBootTrigger = trigger.cast::<IBootTrigger>()?;
-                i_boot_trigger.SetDelay(delay)?;
+                i_boot_trigger.SetDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -820,13 +852,11 @@ impl ScheduleBuilder<Daily> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
@@ -836,17 +866,16 @@ impl ScheduleBuilder<Daily> {
     /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_daily_trigger: IDailyTrigger = i_trigger.cast::<IDailyTrigger>()?;
-                i_daily_trigger.SetRandomDelay(delay)?;
+                i_daily_trigger.SetRandomDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -854,7 +883,6 @@ impl ScheduleBuilder<Daily> {
 
 impl ScheduleBuilder<Event> {
     /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/eventtrigger-delay>
     ///
@@ -865,17 +893,16 @@ impl ScheduleBuilder<Event> {
     /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new().unwrap()
     ///     .create_event()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .delay("P2DT5S").unwrap();
+    ///     .delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
     /// ```
-    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
-                i_event_trigger.SetDelay(delay)?;
+                i_event_trigger.SetDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -894,7 +921,6 @@ impl ScheduleBuilder<Event> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -942,7 +968,6 @@ impl ScheduleBuilder<Event> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -995,7 +1020,6 @@ impl ScheduleBuilder<Logon> {
     }
 
     /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/logontrigger-delay>
     ///
@@ -1006,17 +1030,16 @@ impl ScheduleBuilder<Logon> {
     /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
     ///     .create_logon()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .delay("P2DT5S").unwrap();
+    ///     .delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();
     /// ```
-    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_logon_trigger: ILogonTrigger = trigger.cast::<ILogonTrigger>()?;
-                i_logon_trigger.SetDelay(delay)?;
+                i_logon_trigger.SetDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1046,7 +1069,6 @@ impl ScheduleBuilder<Logon> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1092,7 +1114,6 @@ impl ScheduleBuilder<Monthly> {
 
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1119,13 +1140,11 @@ impl ScheduleBuilder<Monthly> {
 
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
@@ -1135,17 +1154,16 @@ impl ScheduleBuilder<Monthly> {
     /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration { days: Some(2), seconds: Some(5) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
-                i_monthly_trigger.SetRandomDelay(delay)?;
+                i_monthly_trigger.SetRandomDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1170,7 +1188,6 @@ impl ScheduleBuilder<Monthly> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1221,7 +1238,6 @@ impl ScheduleBuilder<MonthlyDOW> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1249,13 +1265,11 @@ impl ScheduleBuilder<MonthlyDOW> {
 
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
@@ -1265,18 +1279,17 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_monthly_dow_trigger: IMonthlyDOWTrigger =
                     i_trigger.cast::<IMonthlyDOWTrigger>()?;
-                i_monthly_dow_trigger.SetRandomDelay(delay)?;
+                i_monthly_dow_trigger.SetRandomDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1302,7 +1315,6 @@ impl ScheduleBuilder<MonthlyDOW> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1332,7 +1344,6 @@ impl ScheduleBuilder<MonthlyDOW> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1362,7 +1373,6 @@ impl ScheduleBuilder<MonthlyDOW> {
 
 impl ScheduleBuilder<Registration> {
     /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/registrationtrigger-delay>
     ///
@@ -1370,21 +1380,21 @@ impl ScheduleBuilder<Registration> {
     /// ```
     /// use planif::schedule_builder::{ ScheduleBuilder, Registration };
     ///
+    /// let com: Rc<ComRuntime> = Rc::new(ComRuntime{});
     /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new().unwrap()
     ///     .create_registration()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .delay("PT5M").unwrap();
     /// ```
-    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_registration_trigger: IRegistrationTrigger =
                     trigger.cast::<IRegistrationTrigger>()?;
-                i_registration_trigger.SetDelay(delay)?;
+                i_registration_trigger.SetDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1440,7 +1450,6 @@ impl ScheduleBuilder<Time> {
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     ///
@@ -1451,17 +1460,16 @@ impl ScheduleBuilder<Time> {
     /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new().unwrap()
     ///     .create_time()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration {days: Some(2), seconds: Some(5) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_time_trigger: ITimeTrigger = i_trigger.cast::<ITimeTrigger>()?;
-                i_time_trigger.SetRandomDelay(delay)?;
+                i_time_trigger.SetRandomDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1512,7 +1520,6 @@ impl ScheduleBuilder<Weekly> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1538,13 +1545,11 @@ impl ScheduleBuilder<Weekly> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     ///
@@ -1556,17 +1561,16 @@ impl ScheduleBuilder<Weekly> {
     /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_weekly_trigger: IWeeklyTrigger = i_trigger.cast::<IWeeklyTrigger>()?;
-                i_weekly_trigger.SetRandomDelay(delay)?;
+                i_weekly_trigger.SetRandomDelay(delay.to_string())?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1591,7 +1595,7 @@ pub struct Action {
 }
 
 impl Action {
-    /// The work items performed by a task are called actions. A task can have a single action 
+    /// The work items performed by a task are called actions. A task can have a single action
     /// or a maximum of 32 actions. Be aware that when multiple actions are specified, they are executed sequentially.
     pub fn new(id: &str, path: &str, working_dir: &str, args: &str) -> Self {
         Self {

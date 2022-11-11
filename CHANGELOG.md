@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add `Duration` struct to ease usage of delays and other methods using string duration formats
 * Added tests for `Duration` to_string() impl
 
+### Breaking changes
+* Changed `delay` methods to take durations instead of `str`
+* Change `schedule_builder`s to take in a ComRuntime when creating them.
+    * ComRuntime allows users to create multiple builders while reusing the com and stops users from accidentally
+      dropping the com
+
 ## [0.2.1]
 ### Updated
 * Update documentation, add deny missing_docs
