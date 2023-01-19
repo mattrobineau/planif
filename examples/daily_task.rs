@@ -1,9 +1,11 @@
 use chrono::prelude::*;
-use planif::schedule::TaskCreationFlags;
+use planif::enums::TaskCreationFlags;
 use planif::schedule_builder::{Action, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sb = ScheduleBuilder::new().unwrap();
+    let com = planif::schedule_builder::ComRuntime::new()?;
+
+    let sb = ScheduleBuilder::new(&com).unwrap();
     sb.create_daily()
         .author("Matt")?
         .description("Test Trigger")?

@@ -45,42 +45,32 @@ pub struct Time {}
 /// Marker type for a weekly [`ScheduleBuilder<Weekly>`]
 pub struct Weekly {}
 
-/// Creates a com runtime for reuse.
-#[derive(Debug, Clone)]
-pub struct ComRuntime {
-    com: Rc<Com>
-}
+/// Represents a COM runtime required for building schedules tasks
+#[derive(Clone)]
+pub struct ComRuntime(Rc<Com>);
 
 impl ComRuntime {
-    /// Create a new ComRuntime (CoInitiliazeEx) which is passed to one or more [ScheduleBuilder]'s
+    /// Creates a COM runtime for use with one or more [ScheduleBuilder]'s
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let com = Com::initialize()?;
-        Ok(Self { com: Rc::new(com) })
+        Ok(ComRuntime(Rc::new(Com::initialize()?)))
     }
 }
 
-#[derive(Debug)]
-#[doc(hidden)]
-pub(crate) struct Com;
+struct Com;
 
 impl Com {
-    pub fn initialize() -> Result<Self, Box<dyn std::error::Error>> {
-        unsafe {
-            CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
-        }
-        Ok(Com)
-    }
+  fn initialize() -> Result<Self, Box<dyn std::error::Error>> {
+    unsafe { CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?; }
+    Ok(Com)
+  }
 }
 
 impl Drop for Com {
-    fn drop(&mut self) {
-        unsafe {
-            CoUninitialize();
-        }
-    }
+  fn drop(&mut self) {
+    unsafe { CoUninitialize(); }
+  }
 }
 
-#[derive(Debug)]
 #[doc(hidden)]
 pub struct ScheduleBuilder<Frequency = Base> {
     pub(crate) frequency: std::marker::PhantomData<Frequency>,
@@ -96,7 +86,7 @@ impl ScheduleBuilder<Base> {
     /// let runtime = ComRuntime;
     /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new().unwrap();
     /// ```
-    pub fn new(com: ComRuntime) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(com: &ComRuntime) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let sb_com = com.clone();
 
@@ -603,12 +593,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
                     message: "Invalid operation: group_id and user_id are mutually exclusive and cannot both be set."
                         .to_string(),
                 }));
-            } else {
-                if let Some(gid) = settings.group_id {
-                    principal.SetGroupId(gid)?;
-                } else if let Some(uid) = settings.user_id {
-                    principal.SetUserId(uid)?;
-                }
+            } else if let Some(gid) = settings.group_id {
+                principal.SetGroupId(gid)?;
+            } else if let Some(uid) = settings.user_id {
+                principal.SetUserId(uid)?;
             }
 
             principal.SetId(settings.id)?;

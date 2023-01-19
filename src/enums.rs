@@ -14,7 +14,7 @@ impl From<DayOfMonth> for i32 {
     #[allow(overflowing_literals)]
     fn from(day: DayOfMonth) -> Self {
         match day {
-            DayOfMonth::Day(i) => 1 << i - 1,
+            DayOfMonth::Day(i) => 1 << (i - 1),
             DayOfMonth::Last => 0x80000000,
         }
     }
