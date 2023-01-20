@@ -1,8 +1,9 @@
-use planif::schedule::TaskCreationFlags;
-use planif::schedule_builder::{Action, ScheduleBuilder};
+use planif::enums::TaskCreationFlags;
+use planif::schedule_builder::{Action, ComRuntime, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sb = ScheduleBuilder::new().unwrap();
+    let com = ComRuntime::new()?;
+    let sb = ScheduleBuilder::new(&com).unwrap();
     sb.create_logon()
         .author("Matt")?
         .description("Test Time Trigger")?

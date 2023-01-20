@@ -82,9 +82,10 @@ impl ScheduleBuilder<Base> {
     /// Create a new base builder.
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ Base, ScheduleBuilder };
-    /// let runtime = ComRuntime;
-    /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new().unwrap();
+    /// use planif::schedule_builder::{ Base, ComRuntime, ScheduleBuilder };
+    ///
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new(&com).unwrap();
     /// ```
     pub fn new(com: &ComRuntime) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
@@ -126,9 +127,10 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Boot, ScheduleBuilder };
+    /// use planif::schedule_builder::{ Boot, ComRuntime, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_boot();
     /// ```
     pub fn create_boot(self) -> ScheduleBuilder<Boot> {
@@ -144,9 +146,10 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Daily, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Daily, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily();
     /// ```
     pub fn create_daily(mut self) -> ScheduleBuilder<Daily> {
@@ -163,9 +166,10 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Event, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Event, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_event();
     /// ```
     pub fn create_event(mut self) -> ScheduleBuilder<Event> {
@@ -182,9 +186,10 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Idle, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Idle, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Idle> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Idle> = ScheduleBuilder::new(&com).unwrap()
     ///         .create_idle();
     /// ```
     pub fn create_idle(self) -> ScheduleBuilder<Idle> {
@@ -200,9 +205,10 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Logon, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Logon, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_logon();
     /// ```
     pub fn create_logon(self) -> ScheduleBuilder<Logon> {
@@ -217,9 +223,10 @@ impl ScheduleBuilder<Base> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ Monthly, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Monthly, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly();
     /// ```
     pub fn create_monthly(self) -> ScheduleBuilder<Monthly> {
@@ -234,9 +241,10 @@ impl ScheduleBuilder<Base> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ MonthlyDOW, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, MonthlyDOW, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow();
     /// ```
     pub fn create_monthly_dow(mut self) -> ScheduleBuilder<MonthlyDOW> {
@@ -252,9 +260,10 @@ impl ScheduleBuilder<Base> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ Registration, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Registration, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_registration();
     /// ```
     pub fn create_registration(self) -> ScheduleBuilder<Registration> {
@@ -270,9 +279,10 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Time };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Time };
     ///
-    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_time();
     /// ```
     pub fn create_time(mut self) -> ScheduleBuilder<Time> {
@@ -289,9 +299,10 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly();
     /// ```
     pub fn create_weekly(self) -> ScheduleBuilder<Weekly> {
@@ -326,9 +337,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .author("Alice").unwrap()
@@ -348,9 +360,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .author("Alice").unwrap()
@@ -377,9 +390,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -404,9 +418,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -438,9 +453,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -469,9 +485,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -523,9 +540,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -562,7 +580,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// ```
     /// use planif::settings::{ PrincipalSettings, RunLevel, LogonType };
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
     /// let settings = PrincipalSettings {
     ///     display_name: "Planif".to_string(),
@@ -573,7 +591,8 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ///     user_id: Some("MyServiceAccount".to_string()),
     /// };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -612,12 +631,13 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// ```
     /// use planif::settings::{ Settings };
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
     /// let settings = Settings::new();
     /// settings.allow_demand_start = Some(true);
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -750,9 +770,10 @@ impl ScheduleBuilder<Boot> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Boot };
+    /// use planif::schedule_builder::{ Boot, ComRuntime, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_boot()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -775,9 +796,10 @@ impl ScheduleBuilder<Boot> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Boot };
+    /// use planif::schedule_builder::{ Boot, ComRuntime, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_boot()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
@@ -803,9 +825,10 @@ impl ScheduleBuilder<Daily> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Daily };
+    /// use planif::schedule_builder::{ ComRuntime, Daily, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -825,9 +848,10 @@ impl ScheduleBuilder<Daily> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Daily };
+    /// use planif::schedule_builder::{ ComRuntime, Daily, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .days_interval(1).unwrap();
@@ -849,9 +873,10 @@ impl ScheduleBuilder<Daily> {
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Daily };
+    /// use planif::schedule_builder::{ ComRuntime, Daily, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .random_delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();
@@ -876,9 +901,10 @@ impl ScheduleBuilder<Event> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Event };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Event };
     ///
-    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_event()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
@@ -917,9 +943,10 @@ impl ScheduleBuilder<Event> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Event };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Event };
     ///
-    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_event()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -966,9 +993,10 @@ impl ScheduleBuilder<Idle> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Idle };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Idle };
     ///
-    /// let builder: ScheduleBuilder<Idle> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Idle> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_idle()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -989,9 +1017,10 @@ impl ScheduleBuilder<Logon> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Logon };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Logon };
     ///
-    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_logon()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1013,9 +1042,10 @@ impl ScheduleBuilder<Logon> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Logon };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Logon };
     ///
-    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_logon()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();
@@ -1042,9 +1072,10 @@ impl ScheduleBuilder<Logon> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Logon };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Logon };
     ///
-    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_logon()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .user_id("MyDomain\\User").unwrap();
@@ -1067,9 +1098,10 @@ impl ScheduleBuilder<Monthly> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfMonth;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .days_of_month(vec![DayOfMonth::Day(1), DayOfMonth::Day(15),
@@ -1110,9 +1142,10 @@ impl ScheduleBuilder<Monthly> {
     /// # Example
     /// ```
     /// use planif::enums::Month;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .months_of_year(vec![Month::January, Month::June, Month::December]).unwrap();
@@ -1137,9 +1170,10 @@ impl ScheduleBuilder<Monthly> {
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .random_delay(Duration { days: Some(2), seconds: Some(5) }).unwrap();
@@ -1161,9 +1195,10 @@ impl ScheduleBuilder<Monthly> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .run_on_last_day(true).unwrap();
@@ -1184,9 +1219,10 @@ impl ScheduleBuilder<Monthly> {
     /// days of specific months
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1209,9 +1245,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfWeek;
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MonthlyDOWTrigger", true).unwrap()
     ///     .days_of_week(vec![DayOfWeek::Sunday, DayOfWeek::Thursday]).unwrap();
@@ -1234,9 +1271,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// # Example
     /// ```
     /// use planif::enums::Month;
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .months_of_year(vec![Month::January, Month::June, Month::December]).unwrap();
@@ -1262,9 +1300,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .random_delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
@@ -1287,9 +1326,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .run_on_last_week(true).unwrap();
@@ -1312,9 +1352,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// # Example
     /// ```
     /// use planif::enums::WeekOfMonth;
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .weeks_of_month(vec![WeekOfMonth::Third]).unwrap();
@@ -1341,9 +1382,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1366,10 +1408,10 @@ impl ScheduleBuilder<Registration> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Registration };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Registration };
     ///
-    /// let com: Rc<ComRuntime> = Rc::new(ComRuntime{});
-    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_registration()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .delay("PT5M").unwrap();
@@ -1391,9 +1433,10 @@ impl ScheduleBuilder<Registration> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Registration };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Registration };
     ///
-    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_registration()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1419,9 +1462,10 @@ impl ScheduleBuilder<Time> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Time };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Time };
     ///
-    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_time()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1443,9 +1487,10 @@ impl ScheduleBuilder<Time> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Time };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Time };
     ///
-    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_time()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .random_delay(Duration {days: Some(2), seconds: Some(5) }).unwrap();
@@ -1469,9 +1514,10 @@ impl ScheduleBuilder<Weekly> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1492,9 +1538,10 @@ impl ScheduleBuilder<Weekly> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfWeek;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .days_of_week(vec![DayOfWeek::Sunday, DayOfWeek::Thursday]).unwrap();
@@ -1518,9 +1565,10 @@ impl ScheduleBuilder<Weekly> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfWeek;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .weeks_interval(1).unwrap();
@@ -1544,9 +1592,10 @@ impl ScheduleBuilder<Weekly> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfWeek;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .random_delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();

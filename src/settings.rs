@@ -322,6 +322,12 @@ impl fmt::Display for Duration {
     }
 }
 
+impl Default for Duration {
+    fn default() -> Self {
+        Duration::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

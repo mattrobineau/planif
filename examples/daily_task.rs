@@ -1,9 +1,9 @@
 use chrono::prelude::*;
 use planif::enums::TaskCreationFlags;
-use planif::schedule_builder::{Action, ScheduleBuilder};
+use planif::schedule_builder::{Action, ComRuntime, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let com = planif::schedule_builder::ComRuntime::new()?;
+    let com = ComRuntime::new()?;
 
     let sb = ScheduleBuilder::new(&com).unwrap();
     sb.create_daily()
