@@ -78,6 +78,12 @@ impl IdleSettings {
     }
 }
 
+impl Default for IdleSettings {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Values for the instance policy.
 pub enum InstancesPolicy {
     /// Starts a new instance while an existing instance of the task is running.
@@ -264,6 +270,12 @@ impl Settings {
     }
 }
 
+impl Default for Settings {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Represents a duration of time.
 #[derive(Debug, Clone, Copy)]
 #[allow(missing_docs)]
@@ -324,7 +336,7 @@ impl fmt::Display for Duration {
 
 impl Default for Duration {
     fn default() -> Self {
-        Duration::new()
+        Self::new()
     }
 }
 
