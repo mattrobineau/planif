@@ -408,11 +408,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     }
 
     /// The amount of time that is allowed to complete the task.
-    /// The format for this string is PnYnMnDTnHnMnS, where nY is the number of years,
-    /// nM is the number of months, nD is the number of days, 'T' is the date/time separator,
-    /// nH is the number of hours, nM is the number of minutes, and nS is the number of
-    /// seconds (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies one month,
-    /// four days, two hours, and five minutes). A value of PT0S will enable the task to run indefinitely.
     ///
     /// # Example
     /// ```
@@ -424,7 +419,11 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
-    ///     .execution_time_limit("PT5M").unwrap()
+    ///     .execution_time_limit(Duration {
+    ///         minutes: Some(5),
+    ///         ..Default::default()
+    ///         }
+    ///     ).unwrap()
     ///     .build().unwrap();
     /// ```
     pub fn execution_time_limit(
@@ -519,16 +518,11 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ///
     /// # Parameters
     /// ## duration
-    /// How long the pattern is repeated. The format for this string is PnYnMnDTnHnMnS, where nY is
-    /// the number of years, nM is the number of months, nD is the number of days, 'T' is the date/time
-    /// separator, nH is the number of hours, nM is the number of minutes, and nS is the number of seconds
-    /// (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies one month, four days, two hours,
-    /// and five minutes). The minimum time allowed is one minute.
+    /// How long the pattern is repeated.
+    /// The minimum time allowed for a Windows Scheduled Task is one minute.
     ///
     /// ## interval
-    /// The amount of time between each restart of the task. The format for this string is
-    /// P<days>DT<hours>H<minutes>M<seconds>S (for example, "PT5M" is 5 minutes, "PT1H" is 1 hour, and "PT20M"
-    /// is 20 minutes). The maximum time allowed is 31 days, and the minimum time allowed is 1 minute.
+    /// The amount of time between each restart of the task.
     ///
     /// # stop_at_duration_end
     /// A Boolean value that indicates if a running instance of the task is stopped at the end of the repetition
@@ -546,20 +540,28 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
-    ///     .repetition("PT5M", "PT1H", true).unwrap()
+    ///     .repetition(Duration {
+    ///             minutes: Some(5),
+    ///             ..Default::default()
+    ///         }, 
+    ///         Duration {
+    ///             hours: 1,
+    ///             ..Default::default()
+    ///         }, 
+    ///         true).unwrap()
     ///     .build().unwrap();
     /// ```
     pub fn repetition(
         self,
         duration: Duration,
-        interval: &str,
+        interval: Duration,
         stop_at_duration_end: bool,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let repetition: IRepetitionPattern = trigger.Repetition()?;
                 repetition.SetDuration(&BSTR::from(duration.to_string()))?;
-                repetition.SetInterval(&BSTR::from(interval))?;
+                repetition.SetInterval(&BSTR::from(interval.to_string()))?;
                 repetition.SetStopAtDurationEnd(stop_at_duration_end as i16)?;
             }
             Ok(self)
@@ -654,7 +656,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
 
                 #[allow(deprecated)]
                 if let Some(setting) = s.idle_duration {
-                    idle_settings.SetIdleDuration(&BSTR::from(setting))?;
+                    idle_settings.SetIdleDuration(&BSTR::from(setting.to_string()))?;
                 }
 
                 if let Some(setting) = s.restart_on_idle {
@@ -667,7 +669,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
 
                 #[allow(deprecated)]
                 if let Some(setting) = s.wait_timeout {
-                    idle_settings.SetWaitTimeout(&BSTR::from(setting))?;
+                    idle_settings.SetWaitTimeout(&BSTR::from(setting.to_string()))?;
                 }
 
                 task_settings.SetIdleSettings(&idle_settings)?;
@@ -695,7 +697,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             }
 
             if let Some(s) = settings.delete_expired_task_after {
-                task_settings.SetDeleteExpiredTaskAfter(&BSTR::from(s))?;
+                task_settings.SetDeleteExpiredTaskAfter(&BSTR::from(s.to_string()))?;
             }
 
             if let Some(s) = settings.disallow_start_if_on_batteries {
@@ -1413,7 +1415,10 @@ impl ScheduleBuilder<Registration> {
     /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_registration()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .delay("PT5M").unwrap();
+    ///     .delay(Duration {
+    ///         minutes: Some(5),
+    ///         ..Default::default()
+    ///     }).unwrap();
     /// ```
     pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {

@@ -40,13 +40,8 @@ pub struct IdleSettings {
     /// Gets or sets a String that indicates the amount of time that the computer must be in an idle state before
     /// the task is run.
     ///
-    /// A value that indicates the amount of time that the computer must be in an idle state before the task
-    /// is run). The format for this string is PnYnMnDTnHnMnS, where nY is the number of years, nM is the number
-    /// of months, nD is the number of days, 'T' is the date/time separator, nH is the number of hours,
-    /// nM is the number of minutes, and nS is the number of seconds (for example, PT5M specifies 5 minutes
-    /// and P1M4DT2H5M specifies one month, four days, two hours, and five minutes). The minimum value is
-    /// one minute.
-    pub idle_duration: Option<String>,
+    /// The minimum value allowed by the Windows Task Scheduler is one minute.
+    pub idle_duration: Option<Duration>,
     /// Gets or sets a Boolean value that indicates whether the task is restarted when the computer cycles into an idle
     /// condition more than once.
     pub restart_on_idle: Option<bool>,
@@ -57,12 +52,8 @@ pub struct IdleSettings {
     /// This field is deprecated.
     /// Get or sets a String that indicates the amount of time that the Task Scheduler will wait for an idle
     /// condition to occur.
-    ///
-    /// The format for this String is PnYnMnDTnHnMnS, where nY is the number of years, nM is the number of months,
-    /// nD is the number of days, 'T' is the date/time separator, nH is the number of hours, nM is the number
-    /// of minutes, and nS is the number of seconds (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies
-    /// one month, four days, two hours, and five minutes). The minimum time allowed is 1 minute.
-    pub wait_timeout: Option<String>,
+    /// The minimum time allowed by the Windows Task Scheduler is 1 minute.
+    pub wait_timeout: Option<Duration>,
 }
 
 #[allow(deprecated)]
@@ -190,13 +181,7 @@ pub struct Settings {
     /// Gets or sets an integer value that indicates which version of Task Scheduler a task is compatible with.
     pub compatibility: Option<Compatibility>,
     /// Gets or sets the amount of time that the Task Scheduler will wait before deleting the task after it expires.
-    ///
-    /// A string that gets or sets the amount of time that the Task Scheduler will wait before deleting the task after
-    /// it expires. The format for this string is PnYnMnDTnHnMnS, where nY is the number of years, nM is the number of
-    /// months, nD is the number of days, 'T' is the date/time separator, nH is the number of hours, nM is the number
-    /// of minutes, and nS is the number of seconds (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies one
-    /// month, four days, two hours, and five minutes).
-    pub delete_expired_task_after: Option<String>,
+    pub delete_expired_task_after: Option<Duration>,
     /// Gets or sets a Boolean value that indicates that the task will not be started if the computer is running on
     /// battery power.
     pub disallow_start_if_on_batteries: Option<bool>,
