@@ -5,7 +5,7 @@ use crate::{
     settings::{Duration, PrincipalSettings, Settings},
 };
 use std::rc::Rc;
-use windows::core::{ BSTR, Interface };
+use windows::core::{Interface, BSTR};
 use windows::Win32::System::Com::VARIANT;
 use windows::Win32::System::Com::{
     CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED,
@@ -23,25 +23,27 @@ use windows::Win32::System::TaskScheduler::{
 /* triggers */
 /// Marker type for base [`ScheduleBuilder<Base>`]
 pub struct Base {}
-/// Marker type for boot [`ScheduleBuilder<Boot>`]
+/// Marker type for boot [`ScheduleBuilder<Boot>`](ScheduleBuilder#impl-ScheduleBuilder<Boot>)
 pub struct Boot {}
-/// Marker type for a daily [`ScheduleBuilder<Daily>`]
+/// Marker type for a daily [`ScheduleBuilder<Daily>`](ScheduleBuilder#impl-ScheduleBuilder<Daily>)
 pub struct Daily {}
-/// Marker type for an event [`ScheduleBuilder<Event>`]
+/// Marker type for an event [`ScheduleBuilder<Event>`](ScheduleBuilder#impl-ScheduleBuilder<Event>)
 pub struct Event {}
-/// Marker type for an idle [`ScheduleBuilder<Idle>`]
+/// Marker type for an idle [`ScheduleBuilder<Idle>`](ScheduleBuilder#impl-ScheduleBuilder<Idle>)
 pub struct Idle {}
-/// Marker type for a logon [`ScheduleBuilder<Logon>`]
+/// Marker type for a logon [`ScheduleBuilder<Logon>`](ScheduleBuilder#impl-ScheduleBuilder<Logon>)
 pub struct Logon {}
-/// Marker type for a monthly [`ScheduleBuilder<Monthly>`]
+/// Marker type for a monthly
+/// [`ScheduleBuilder<Monthly>`](ScheduleBuilder#impl-ScheduleBuilder<Monthly>)
 pub struct Monthly {}
-/// Marker type for a monthly day of week [`ScheduleBuilder<MonthlyDOW>`]
+/// Marker type for a monthly day of week [`ScheduleBuilder<MonthlyDOW>`](ScheduleBuilder#impl-ScheduleBuilder<MonthlyDOW>)
 pub struct MonthlyDOW {}
-/// Marker type for registration [`ScheduleBuilder<Registration>`]
+/// Marker type for registration [`ScheduleBuilder<Registration>`](ScheduleBuilder#impl-ScheduleBuilder<Registration>)
 pub struct Registration {}
-/// Marker type for a time [`ScheduleBuilder<Time>`]
+/// Marker type for a time [`ScheduleBuilder<Time>`](ScheduleBuilder#impl-ScheduleBuilder<Time>)
 pub struct Time {}
-/// Marker type for a weekly [`ScheduleBuilder<Weekly>`]
+/// Marker type for a weekly
+/// [`ScheduleBuilder<Weekly>`](ScheduleBuilder#impl-ScheduleBuilder<Weekly>)
 pub struct Weekly {}
 
 /// Represents a COM runtime required for building schedules tasks
@@ -49,7 +51,8 @@ pub struct Weekly {}
 pub struct ComRuntime(Rc<Com>);
 
 impl ComRuntime {
-    /// Creates a COM runtime for use with one or more [ScheduleBuilder]'s
+    /// Creates a COM runtime for use with one or more
+    /// [ScheduleBuilder]
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         Ok(ComRuntime(Rc::new(Com::initialize()?)))
     }
@@ -58,19 +61,23 @@ impl ComRuntime {
 struct Com;
 
 impl Com {
-  fn initialize() -> Result<Self, Box<dyn std::error::Error>> {
-    unsafe { CoInitializeEx(None, COINIT_MULTITHREADED)?; }
-    Ok(Com)
-  }
+    fn initialize() -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            CoInitializeEx(None, COINIT_MULTITHREADED)?;
+        }
+        Ok(Com)
+    }
 }
 
 impl Drop for Com {
-  fn drop(&mut self) {
-    unsafe { CoUninitialize(); }
-  }
+    fn drop(&mut self) {
+        unsafe {
+            CoUninitialize();
+        }
+    }
 }
 
-#[doc(hidden)]
+/// A generic schedule builder used to create a specific builder.
 pub struct ScheduleBuilder<Frequency = Base> {
     pub(crate) frequency: std::marker::PhantomData<Frequency>,
     pub(crate) schedule: Schedule,
@@ -543,11 +550,11 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ///     .repetition(Duration {
     ///             minutes: Some(5),
     ///             ..Default::default()
-    ///         }, 
+    ///         },
     ///         Duration {
     ///             hours: 1,
     ///             ..Default::default()
-    ///         }, 
+    ///         },
     ///         true).unwrap()
     ///     .build().unwrap();
     /// ```
