@@ -1,6 +1,5 @@
 use chrono::prelude::*;
-use planif::enums::{DayOfMonth, Month};
-use planif::schedule::TaskCreationFlags;
+use planif::enums::{DayOfMonth, Month, TaskCreationFlags};
 use planif::schedule_builder::{Action, Monthly, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

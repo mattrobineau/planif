@@ -1,8 +1,9 @@
-use planif::schedule::TaskCreationFlags;
+use planif::enums::TaskCreationFlags;
 use planif::schedule_builder::{Action, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sb = ScheduleBuilder::new().unwrap();
+
     sb.create_logon()
         .author("Matt")?
         .description("Test Time Trigger")?
@@ -12,5 +13,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .user_id("")?
         .build()?
         .register("TimeTaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
+
     Ok(())
 }
