@@ -38,7 +38,6 @@
 //!
 //! For more examples, refer to the `planif/examples` folder. The folder contains code for creating each of the triggers.
 
-
 /// Enums used throughout the crate.
 pub mod enums;
 /// Errors used throughout the crate.
@@ -53,8 +52,22 @@ pub mod settings;
 #[cfg(test)]
 mod tests {
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn it_works() -> Result<(), Box<dyn std::error::Error>> {
+        use crate::schedule_builder::{Action, ScheduleBuilder};
+        use crate::enums::TaskCreationFlags;
+        use chrono::prelude::*;
+
+        ScheduleBuilder::new()?
+            .create_daily()
+            .author("Matt")?
+            .description("Test Trigger")?
+            .trigger("test_trigger", true)?
+            .days_interval(1)?
+            .action(Action::new("test", "notepad.exe", "", ""))?
+            .start_boundary(&Local::now().to_rfc3339())?
+            .build()?
+            .register("TaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
+
+        Ok(())
     }
 }

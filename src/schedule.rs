@@ -1,4 +1,5 @@
-use windows::Win32::Foundation::BSTR;
+use windows::Win32::System::Com::VARIANT;
+use windows::core::BSTR;
 use windows::Win32::System::TaskScheduler::{
     IActionCollection, IRegistrationInfo, ITaskDefinition, ITaskFolder, ITaskService,
     ITaskSettings, ITrigger, ITriggerCollection, TASK_LOGON_INTERACTIVE_TOKEN,
@@ -23,16 +24,16 @@ impl Schedule {
     /// Registers the schedule. Flags can be set by using the [TaskCreationFlags](crate::enums::TaskCreationFlags) enum.
     pub fn register(self, task_name: &str, flags: i32) -> Result<(), Box<dyn std::error::Error>> {
         unsafe {
-            let folder: ITaskFolder = self.task_service.GetFolder("\\")?;
+            let folder: ITaskFolder = self.task_service.GetFolder(&"\\".into())?;
             folder.RegisterTaskDefinition(
-                BSTR::from(task_name),
-                self.task_definition,
+                &task_name.into(),
+                &self.task_definition,
                 flags,
                 // TODO allow user to specify creds
-                None,
-                None,
+                VARIANT::default(),
+                VARIANT::default(),
                 TASK_LOGON_INTERACTIVE_TOKEN,
-                None,
+                VARIANT::default(),
             )?;
         }
 
