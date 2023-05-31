@@ -4,20 +4,21 @@ use crate::{
     schedule::Schedule,
     settings::{PrincipalSettings, Settings},
 };
-use windows::{core::{Interface, ComInterface}, Win32::{Foundation::VARIANT_BOOL, System::TaskScheduler::ITrigger}};
+use windows::core::ComInterface;
 use windows::core::BSTR;
-use windows::Win32::System::Com::VARIANT;
+use windows::Win32::Foundation::VARIANT_BOOL;
 use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED,
+    CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED, VARIANT,
 };
 use windows::Win32::System::TaskScheduler::{
     IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IExecAction,
     IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, INetworkSettings, IPrincipal,
-    IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskService,
-    ITaskSettings, ITimeTrigger, ITriggerCollection, IWeeklyTrigger, TaskScheduler,
-    TASK_ACTION_EXEC, TASK_LOGON_TYPE, TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT, TASK_TRIGGER_DAILY,
-    TASK_TRIGGER_EVENT, TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON, TASK_TRIGGER_MONTHLY,
-    TASK_TRIGGER_MONTHLYDOW, TASK_TRIGGER_REGISTRATION, TASK_TRIGGER_TIME, TASK_TRIGGER_WEEKLY,
+    IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskFolder,
+    ITaskService, ITaskSettings, ITimeTrigger, ITrigger, ITriggerCollection, IWeeklyTrigger,
+    TaskScheduler, TASK_ACTION_EXEC, TASK_LOGON_TYPE, TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT,
+    TASK_TRIGGER_DAILY, TASK_TRIGGER_EVENT, TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON,
+    TASK_TRIGGER_MONTHLY, TASK_TRIGGER_MONTHLYDOW, TASK_TRIGGER_REGISTRATION, TASK_TRIGGER_TIME,
+    TASK_TRIGGER_WEEKLY,
 };
 
 /* triggers */
@@ -72,6 +73,7 @@ impl ScheduleBuilder<Base> {
                 VARIANT::default(),
             )?;
 
+            let task_folder: ITaskFolder = task_service.GetFolder(&BSTR::from("\\"))?;
             let task_definition: ITaskDefinition = task_service.NewTask(0)?;
             let triggers: ITriggerCollection = task_definition.Triggers()?;
             let registration_info: IRegistrationInfo = task_definition.RegistrationInfo()?;
@@ -81,6 +83,7 @@ impl ScheduleBuilder<Base> {
             Ok(Self {
                 frequency: std::marker::PhantomData::<Base>,
                 schedule: Schedule {
+                    task_folder,
                     actions,
                     force_start_boundary: false,
                     registration_info,
@@ -267,6 +270,41 @@ impl ScheduleBuilder<Base> {
 }
 
 impl<Frequency> ScheduleBuilder<Frequency> {
+    /// Sets the task folder for this trigger.
+    /// For example, the root folder is "\\".
+    /// Do not use a backslash following the last folder name in the path.
+    /// _optional_
+    ///
+    /// # Example
+    /// ```
+    /// use planif::schedule::Schedule;
+    /// use planif::schedule_builder::ScheduleBuilder;
+    ///
+    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    ///     .create_daily()
+    ///     .in_folder("\\My Tasks").unwrap()
+    ///     .build().unwrap();
+    /// ```
+    pub fn in_folder(mut self, folder: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            // check if folder exists, if not make it
+            self.schedule.task_folder =
+                match self.schedule.task_service.GetFolder(&BSTR::from(folder)) {
+                    Ok(x) => x,
+                    Err(_) => self
+                        .schedule
+                        .task_service
+                        .GetFolder(&BSTR::from("\\"))
+                        .unwrap()
+                        .CreateFolder(
+                            &BSTR::from(folder.trim_start_matches('\\')),
+                            VARIANT::default(),
+                        )?,
+                };
+        }
+        Ok(self)
+    }
+
     /// Creates the action to execute when the task is run.
     ///
     /// See examples <https://github.com/mattrobineau/planif/tree/main/examples>
@@ -1572,10 +1610,10 @@ impl ScheduleBuilder<Weekly> {
 }
 
 fn trigger_uninitialised_error() -> Box<dyn std::error::Error> {
-    return Box::new(InvalidOperationError {
+    Box::new(InvalidOperationError {
         message: "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
             .to_string(),
-    });
+    })
 }
 
 /* actions */
@@ -1590,7 +1628,7 @@ pub struct Action {
 }
 
 impl Action {
-    /// The work items performed by a task are called actions. A task can have a single action 
+    /// The work items performed by a task are called actions. A task can have a single action
     /// or a maximum of 32 actions. Be aware that when multiple actions are specified, they are executed sequentially.
     pub fn new(id: &str, path: &str, working_dir: &str, args: &str) -> Self {
         Self {
