@@ -46,8 +46,6 @@ pub mod error;
 pub mod schedule;
 /// Build different [Schedules](schedule::Schedule) for the Windows Task Scheduler.
 pub mod schedule_builder;
-/// Enumerate scheduled tasks.
-pub mod schedule_getter;
 /// Various settings available while building [Schedules](schedule::Schedule).
 pub mod settings;
 
