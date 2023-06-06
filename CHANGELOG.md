@@ -8,11 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * Add `Duration` struct to ease usage of delays and other methods using string duration formats
-* Added tests for `Duration` to_string() impl
+* Add tests for `Duration` to_string() impl
+* Add ability to specify a folder for scheduled tasks
 
 ## [0.2.1]
 ### Updated
 * Update documentation, add deny missing_docs
+* Update examples for in_folder()
 
 ## [0.2.0] - 2022-10-09
 
