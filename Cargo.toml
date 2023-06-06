@@ -14,9 +14,8 @@ categories = ["os::windows-apis"]
 chrono = "0.4"
 
 [dependencies.windows]
-version = "0.34.0"
+version = "0.48.0"
 features = [
-    "alloc",
     "Data_Xml_Dom",
     "Win32_Foundation",
     "Win32_Security",

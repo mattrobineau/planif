@@ -1,8 +1,9 @@
-use planif::schedule::TaskCreationFlags;
+use planif::enums::TaskCreationFlags;
 use planif::schedule_builder::{Action, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sb = ScheduleBuilder::new().unwrap();
+
     sb.create_time()
         .author("Matt")?
         .description("Test Time Trigger")?
@@ -13,5 +14,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .random_delay("PT2S")?
         .build()?
         .register("TimeTaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
+
     Ok(())
 }

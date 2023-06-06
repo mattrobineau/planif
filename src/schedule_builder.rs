@@ -4,20 +4,21 @@ use crate::{
     schedule::Schedule,
     settings::{PrincipalSettings, Settings},
 };
-use windows::core::Interface;
-use windows::Win32::Foundation::BSTR;
-use windows::Win32::System::Com::VARIANT;
+use windows::core::ComInterface;
+use windows::core::BSTR;
+use windows::Win32::Foundation::VARIANT_BOOL;
 use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED,
+    CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED, VARIANT,
 };
 use windows::Win32::System::TaskScheduler::{
     IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IExecAction,
     IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, INetworkSettings, IPrincipal,
-    IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskService,
-    ITaskSettings, ITimeTrigger, ITriggerCollection, IWeeklyTrigger, TaskScheduler,
-    TASK_ACTION_EXEC, TASK_LOGON_TYPE, TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT, TASK_TRIGGER_DAILY,
-    TASK_TRIGGER_EVENT, TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON, TASK_TRIGGER_MONTHLY,
-    TASK_TRIGGER_MONTHLYDOW, TASK_TRIGGER_REGISTRATION, TASK_TRIGGER_TIME, TASK_TRIGGER_WEEKLY,
+    IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskFolder,
+    ITaskService, ITaskSettings, ITimeTrigger, ITrigger, ITriggerCollection, IWeeklyTrigger,
+    TaskScheduler, TASK_ACTION_EXEC, TASK_LOGON_TYPE, TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT,
+    TASK_TRIGGER_DAILY, TASK_TRIGGER_EVENT, TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON,
+    TASK_TRIGGER_MONTHLY, TASK_TRIGGER_MONTHLYDOW, TASK_TRIGGER_REGISTRATION, TASK_TRIGGER_TIME,
+    TASK_TRIGGER_WEEKLY,
 };
 
 /* triggers */
@@ -62,7 +63,7 @@ impl ScheduleBuilder<Base> {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             // On error of unsafe, CoUnintialize!
-            CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED)?;
+            CoInitializeEx(None, COINIT_MULTITHREADED)?;
 
             let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
             task_service.Connect(
@@ -72,6 +73,7 @@ impl ScheduleBuilder<Base> {
                 VARIANT::default(),
             )?;
 
+            let task_folder: ITaskFolder = task_service.GetFolder(&BSTR::from("\\"))?;
             let task_definition: ITaskDefinition = task_service.NewTask(0)?;
             let triggers: ITriggerCollection = task_definition.Triggers()?;
             let registration_info: IRegistrationInfo = task_definition.RegistrationInfo()?;
@@ -81,6 +83,7 @@ impl ScheduleBuilder<Base> {
             Ok(Self {
                 frequency: std::marker::PhantomData::<Base>,
                 schedule: Schedule {
+                    task_folder,
                     actions,
                     force_start_boundary: false,
                     registration_info,
@@ -267,6 +270,41 @@ impl ScheduleBuilder<Base> {
 }
 
 impl<Frequency> ScheduleBuilder<Frequency> {
+    /// Sets the task folder for this trigger.
+    /// For example, the root folder is "\\".
+    /// Do not use a backslash following the last folder name in the path.
+    /// _optional_
+    ///
+    /// # Example
+    /// ```
+    /// use planif::schedule::Schedule;
+    /// use planif::schedule_builder::ScheduleBuilder;
+    ///
+    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    ///     .create_daily()
+    ///     .in_folder("\\My Tasks").unwrap()
+    ///     .build().unwrap();
+    /// ```
+    pub fn in_folder(mut self, folder: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            // check if folder exists, if not make it
+            self.schedule.task_folder =
+                match self.schedule.task_service.GetFolder(&BSTR::from(folder)) {
+                    Ok(x) => x,
+                    Err(_) => self
+                        .schedule
+                        .task_service
+                        .GetFolder(&BSTR::from("\\"))
+                        .unwrap()
+                        .CreateFolder(
+                            &BSTR::from(folder.trim_start_matches('\\')),
+                            VARIANT::default(),
+                        )?,
+                };
+        }
+        Ok(self)
+    }
+
     /// Creates the action to execute when the task is run.
     ///
     /// See examples <https://github.com/mattrobineau/planif/tree/main/examples>
@@ -275,10 +313,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             let i_action: IAction = self.schedule.actions.Create(TASK_ACTION_EXEC)?;
             let i_exec_action: IExecAction = i_action.cast()?;
 
-            i_exec_action.SetPath(action.path)?;
-            i_exec_action.SetId(action.id)?;
-            i_exec_action.SetWorkingDirectory(action.working_dir)?;
-            i_exec_action.SetArguments(action.args)?;
+            i_exec_action.SetPath(&action.path)?;
+            i_exec_action.SetId(&action.id)?;
+            i_exec_action.SetWorkingDirectory(&action.working_dir)?;
+            i_exec_action.SetArguments(&action.args)?;
         }
         Ok(self)
     }
@@ -301,7 +339,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         unsafe {
             self.schedule
                 .registration_info
-                .SetAuthor(BSTR::from(author))?;
+                .SetAuthor(&BSTR::from(author))?;
         }
         Ok(self)
     }
@@ -352,7 +390,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         unsafe {
             self.schedule
                 .registration_info
-                .SetDescription(BSTR::from(description))?;
+                .SetDescription(&BSTR::from(description))?;
         }
         Ok(self)
     }
@@ -391,7 +429,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
-                trigger.SetExecutionTimeLimit(time_limit)?;
+                trigger.SetExecutionTimeLimit(&BSTR::from(time_limit))?;
             }
             Ok(self)
         } else {
@@ -423,7 +461,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     pub fn start_boundary(mut self, start: &str) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
-                trigger.SetStartBoundary(start)?;
+                trigger.SetStartBoundary(&BSTR::from(start))?;
             }
             self.schedule.force_start_boundary = false;
             Ok(self)
@@ -455,7 +493,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     pub fn end_boundary(self, end: &str) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
-                trigger.SetEndBoundary(end)?;
+                trigger.SetEndBoundary(&BSTR::from(end))?;
             }
             Ok(self)
         } else {
@@ -516,9 +554,9 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let repetition: IRepetitionPattern = trigger.Repetition()?;
-                repetition.SetDuration(duration)?;
-                repetition.SetInterval(interval)?;
-                repetition.SetStopAtDurationEnd(stop_at_duration_end as i16)?;
+                repetition.SetDuration(&BSTR::from(duration))?;
+                repetition.SetInterval(&BSTR::from(interval))?;
+                repetition.SetStopAtDurationEnd(VARIANT_BOOL::from(stop_at_duration_end))?;
             }
             Ok(self)
         } else {
@@ -562,25 +600,23 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let principal: IPrincipal = self.schedule.task_definition.Principal()?;
-            principal.SetDisplayName(settings.display_name)?;
+            principal.SetDisplayName(&BSTR::from(settings.display_name))?;
 
             if settings.group_id.is_some() && settings.user_id.is_some() {
                 return Err(Box::new(InvalidOperationError {
                     message: "Invalid operation: group_id and user_id are mutually exclusive and cannot both be set."
                         .to_string(),
                 }));
-            } else {
-                if let Some(gid) = settings.group_id {
-                    principal.SetGroupId(gid)?;
-                } else if let Some(uid) = settings.user_id {
-                    principal.SetUserId(uid)?;
-                }
+            } else if let Some(gid) = settings.group_id {
+                principal.SetGroupId(&BSTR::from(gid))?;
+            } else if let Some(uid) = settings.user_id {
+                principal.SetUserId(&BSTR::from(uid))?;
             }
 
-            principal.SetId(settings.id)?;
+            principal.SetId(&BSTR::from(settings.id))?;
             principal.SetLogonType(TASK_LOGON_TYPE(settings.logon_type as i32))?;
             principal.SetRunLevel(TASK_RUNLEVEL_TYPE(settings.run_level as i32))?;
-            self.schedule.task_definition.SetPrincipal(principal)?;
+            self.schedule.task_definition.SetPrincipal(&principal)?;
             Ok(self)
         }
     }
@@ -613,40 +649,40 @@ impl<Frequency> ScheduleBuilder<Frequency> {
 
                 #[allow(deprecated)]
                 if let Some(setting) = s.idle_duration {
-                    idle_settings.SetIdleDuration(setting)?;
+                    idle_settings.SetIdleDuration(&BSTR::from(setting))?;
                 }
 
                 if let Some(setting) = s.restart_on_idle {
-                    idle_settings.SetRestartOnIdle(setting.into())?;
+                    idle_settings.SetRestartOnIdle(VARIANT_BOOL::from(setting))?;
                 }
 
                 if let Some(setting) = s.stop_on_idle_end {
-                    idle_settings.SetStopOnIdleEnd(setting.into())?;
+                    idle_settings.SetStopOnIdleEnd(VARIANT_BOOL::from(setting))?;
                 }
 
                 #[allow(deprecated)]
                 if let Some(setting) = s.wait_timeout {
-                    idle_settings.SetWaitTimeout(setting)?;
+                    idle_settings.SetWaitTimeout(&BSTR::from(setting))?;
                 }
 
-                task_settings.SetIdleSettings(idle_settings)?;
+                task_settings.SetIdleSettings(&idle_settings)?;
             }
 
             // Handle Network Settings
             if let Some(s) = settings.network_settings {
                 let network_settings: INetworkSettings = task_settings.NetworkSettings()?;
-                network_settings.SetId(s.id)?;
-                network_settings.SetName(s.name)?;
-                task_settings.SetNetworkSettings(network_settings)?;
+                network_settings.SetId(&BSTR::from(s.id))?;
+                network_settings.SetName(&BSTR::from(s.name))?;
+                task_settings.SetNetworkSettings(&network_settings)?;
             }
 
             // Handle settings
             if let Some(s) = settings.allow_demand_start {
-                task_settings.SetAllowDemandStart(s.into())?;
+                task_settings.SetAllowDemandStart(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.allow_hard_terminate {
-                task_settings.SetAllowHardTerminate(s.into())?;
+                task_settings.SetAllowHardTerminate(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.compatibility {
@@ -654,23 +690,23 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             }
 
             if let Some(s) = settings.delete_expired_task_after {
-                task_settings.SetDeleteExpiredTaskAfter(s)?;
+                task_settings.SetDeleteExpiredTaskAfter(&BSTR::from(s))?;
             }
 
             if let Some(s) = settings.disallow_start_if_on_batteries {
-                task_settings.SetDisallowStartIfOnBatteries(s.into())?;
+                task_settings.SetDisallowStartIfOnBatteries(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.enabled {
-                task_settings.SetEnabled(s.into())?;
+                task_settings.SetEnabled(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.execution_time_limit {
-                task_settings.SetExecutionTimeLimit(s)?;
+                task_settings.SetExecutionTimeLimit(&BSTR::from(s))?;
             }
 
             if let Some(s) = settings.hidden {
-                task_settings.SetHidden(s.into())?;
+                task_settings.SetHidden(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.multiple_instances_policy {
@@ -686,34 +722,34 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             }
 
             if let Some(s) = settings.restart_interval {
-                task_settings.SetRestartInterval(s)?;
+                task_settings.SetRestartInterval(&BSTR::from(s))?;
             }
 
             if let Some(s) = settings.run_only_if_idle {
-                task_settings.SetRunOnlyIfIdle(s.into())?;
+                task_settings.SetRunOnlyIfIdle(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.run_only_if_network_available {
-                task_settings.SetRunOnlyIfNetworkAvailable(s.into())?;
+                task_settings.SetRunOnlyIfNetworkAvailable(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.start_when_available {
-                task_settings.SetStartWhenAvailable(s.into())?;
+                task_settings.SetStartWhenAvailable(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.stop_if_going_on_batteries {
-                task_settings.SetStopIfGoingOnBatteries(s.into())?;
+                task_settings.SetStopIfGoingOnBatteries(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.wake_to_run {
-                task_settings.SetWakeToRun(s.into())?;
+                task_settings.SetWakeToRun(VARIANT_BOOL::from(s))?;
             }
 
             if let Some(s) = settings.xml_text {
-                task_settings.SetXmlText(s)?;
+                task_settings.SetXmlText(&BSTR::from(s))?;
             }
 
-            self.schedule.task_definition.SetSettings(task_settings)?;
+            self.schedule.task_definition.SetSettings(&task_settings)?;
         }
         Ok(self)
     }
@@ -738,10 +774,11 @@ impl ScheduleBuilder<Boot> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_BOOT)?;
             let i_boot_trigger: IBootTrigger = trigger.cast::<IBootTrigger>()?;
-            i_boot_trigger.SetId(id)?;
-            i_boot_trigger.SetEnabled(enabled.into())?;
+            i_boot_trigger.SetId(&BSTR::from(id))?;
+            i_boot_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
+
             // Default start boundary to now()
-            self.schedule.trigger = Some(i_boot_trigger.into());
+            self.schedule.trigger = Some(i_boot_trigger.cast::<ITrigger>()?);
         }
 
         Ok(self)
@@ -765,7 +802,7 @@ impl ScheduleBuilder<Boot> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_boot_trigger: IBootTrigger = trigger.cast::<IBootTrigger>()?;
-                i_boot_trigger.SetDelay(delay)?;
+                i_boot_trigger.SetDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -793,9 +830,9 @@ impl ScheduleBuilder<Daily> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_DAILY)?;
             let i_daily_trigger: IDailyTrigger = trigger.cast::<IDailyTrigger>()?;
-            i_daily_trigger.SetId(id)?;
-            i_daily_trigger.SetEnabled(enabled.into())?;
-            self.schedule.trigger = Some(i_daily_trigger.into());
+            i_daily_trigger.SetId(&BSTR::from(id))?;
+            i_daily_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
+            self.schedule.trigger = Some(i_daily_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -842,7 +879,7 @@ impl ScheduleBuilder<Daily> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_daily_trigger: IDailyTrigger = i_trigger.cast::<IDailyTrigger>()?;
-                i_daily_trigger.SetRandomDelay(delay)?;
+                i_daily_trigger.SetRandomDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -871,7 +908,7 @@ impl ScheduleBuilder<Event> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
-                i_event_trigger.SetDelay(delay)?;
+                i_event_trigger.SetDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -890,7 +927,7 @@ impl ScheduleBuilder<Event> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
-                i_event_trigger.SetSubscription(query)?;
+                i_event_trigger.SetSubscription(&BSTR::from(query))?;
             }
             Ok(self)
         } else {
@@ -913,9 +950,9 @@ impl ScheduleBuilder<Event> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_EVENT)?;
             let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
-            i_event_trigger.SetId(id)?;
-            i_event_trigger.SetEnabled(enabled.into())?;
-            self.schedule.trigger = Some(i_event_trigger.into());
+            i_event_trigger.SetId(&BSTR::from(id))?;
+            i_event_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
+            self.schedule.trigger = Some(i_event_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -935,10 +972,10 @@ impl ScheduleBuilder<Event> {
                 let i_task_named_value_collection = i_event_trigger.ValueQueries()?;
 
                 for (name, value) in queries {
-                    i_task_named_value_collection.Create(name, value)?;
+                    i_task_named_value_collection.Create(&BSTR::from(name), &BSTR::from(value))?;
                 }
 
-                i_event_trigger.SetValueQueries(i_task_named_value_collection)?;
+                i_event_trigger.SetValueQueries(&i_task_named_value_collection)?;
             }
             Ok(self)
         } else {
@@ -963,9 +1000,9 @@ impl ScheduleBuilder<Idle> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_IDLE)?;
             let i_idle_trigger: IIdleTrigger = trigger.cast::<IIdleTrigger>()?;
-            i_idle_trigger.SetId(id)?;
-            i_idle_trigger.SetEnabled(enabled.into())?;
-            self.schedule.trigger = Some(i_idle_trigger.into());
+            i_idle_trigger.SetId(&BSTR::from(id))?;
+            i_idle_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
+            self.schedule.trigger = Some(i_idle_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -986,10 +1023,10 @@ impl ScheduleBuilder<Logon> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_LOGON)?;
             let i_logon_trigger: ILogonTrigger = trigger.cast::<ILogonTrigger>()?;
-            i_logon_trigger.SetId(id)?;
-            i_logon_trigger.SetEnabled(enabled.into())?;
+            i_logon_trigger.SetId(&BSTR::from(id))?;
+            i_logon_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
 
-            self.schedule.trigger = Some(i_logon_trigger.into());
+            self.schedule.trigger = Some(i_logon_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -1012,7 +1049,7 @@ impl ScheduleBuilder<Logon> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_logon_trigger: ILogonTrigger = trigger.cast::<ILogonTrigger>()?;
-                i_logon_trigger.SetDelay(delay)?;
+                i_logon_trigger.SetDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -1042,7 +1079,7 @@ impl ScheduleBuilder<Logon> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_logon_trigger: ILogonTrigger = trigger.cast::<ILogonTrigger>()?;
-                i_logon_trigger.SetUserId(id)?;
+                i_logon_trigger.SetUserId(&BSTR::from(id))?;
             }
             Ok(self)
         } else {
@@ -1141,7 +1178,7 @@ impl ScheduleBuilder<Monthly> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
-                i_monthly_trigger.SetRandomDelay(delay)?;
+                i_monthly_trigger.SetRandomDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -1166,7 +1203,7 @@ impl ScheduleBuilder<Monthly> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
-                i_monthly_trigger.SetRunOnLastDayOfMonth(is_run as i16)?;
+                i_monthly_trigger.SetRunOnLastDayOfMonth(VARIANT_BOOL::from(is_run))?;
             }
             Ok(self)
         } else {
@@ -1190,9 +1227,9 @@ impl ScheduleBuilder<Monthly> {
             self.schedule.force_start_boundary = true;
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_MONTHLY)?;
             let i_monthly_trigger: IMonthlyTrigger = trigger.cast::<IMonthlyTrigger>()?;
-            i_monthly_trigger.SetId(id)?;
-            i_monthly_trigger.SetEnabled(enabled.into())?;
-            self.schedule.trigger = Some(i_monthly_trigger.into());
+            i_monthly_trigger.SetId(&BSTR::from(id))?;
+            i_monthly_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
+            self.schedule.trigger = Some(i_monthly_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -1272,7 +1309,7 @@ impl ScheduleBuilder<MonthlyDOW> {
             unsafe {
                 let i_monthly_dow_trigger: IMonthlyDOWTrigger =
                     i_trigger.cast::<IMonthlyDOWTrigger>()?;
-                i_monthly_dow_trigger.SetRandomDelay(delay)?;
+                i_monthly_dow_trigger.SetRandomDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -1298,7 +1335,7 @@ impl ScheduleBuilder<MonthlyDOW> {
             unsafe {
                 let i_monthly_dow_trigger: IMonthlyDOWTrigger =
                     trigger.cast::<IMonthlyDOWTrigger>()?;
-                i_monthly_dow_trigger.SetRunOnLastWeekOfMonth(is_run as i16)?;
+                i_monthly_dow_trigger.SetRunOnLastWeekOfMonth(VARIANT_BOOL::from(is_run))?;
             }
             Ok(self)
         } else {
@@ -1352,9 +1389,9 @@ impl ScheduleBuilder<MonthlyDOW> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_MONTHLYDOW)?;
             let i_monthly_dow_trigger: IMonthlyDOWTrigger = trigger.cast::<IMonthlyDOWTrigger>()?;
-            i_monthly_dow_trigger.SetId(id)?;
-            i_monthly_dow_trigger.SetEnabled(enabled.into())?;
-            self.schedule.trigger = Some(i_monthly_dow_trigger.into());
+            i_monthly_dow_trigger.SetId(&BSTR::from(id))?;
+            i_monthly_dow_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
+            self.schedule.trigger = Some(i_monthly_dow_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -1380,7 +1417,7 @@ impl ScheduleBuilder<Registration> {
             unsafe {
                 let i_registration_trigger: IRegistrationTrigger =
                     trigger.cast::<IRegistrationTrigger>()?;
-                i_registration_trigger.SetDelay(delay)?;
+                i_registration_trigger.SetDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -1404,9 +1441,9 @@ impl ScheduleBuilder<Registration> {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_REGISTRATION)?;
             let i_registration_trigger: IRegistrationTrigger =
                 trigger.cast::<IRegistrationTrigger>()?;
-            i_registration_trigger.SetId(id)?;
-            i_registration_trigger.SetEnabled(enabled.into())?;
-            self.schedule.trigger = Some(i_registration_trigger.into());
+            i_registration_trigger.SetId(&BSTR::from(id))?;
+            i_registration_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
+            self.schedule.trigger = Some(i_registration_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -1431,10 +1468,10 @@ impl ScheduleBuilder<Time> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_TIME)?;
             let i_time_trigger: ITimeTrigger = trigger.cast::<ITimeTrigger>()?;
-            i_time_trigger.SetId(id)?;
-            i_time_trigger.SetEnabled(enabled.into())?;
+            i_time_trigger.SetId(&BSTR::from(id))?;
+            i_time_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
 
-            self.schedule.trigger = Some(i_time_trigger.into());
+            self.schedule.trigger = Some(i_time_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -1457,7 +1494,7 @@ impl ScheduleBuilder<Time> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_time_trigger: ITimeTrigger = i_trigger.cast::<ITimeTrigger>()?;
-                i_time_trigger.SetRandomDelay(delay)?;
+                i_time_trigger.SetRandomDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -1483,10 +1520,10 @@ impl ScheduleBuilder<Weekly> {
         unsafe {
             let trigger = self.schedule.triggers.Create(TASK_TRIGGER_WEEKLY)?;
             let i_weekly_trigger: IWeeklyTrigger = trigger.cast::<IWeeklyTrigger>()?;
-            i_weekly_trigger.SetId(id)?;
-            i_weekly_trigger.SetEnabled(enabled.into())?;
+            i_weekly_trigger.SetId(&BSTR::from(id))?;
+            i_weekly_trigger.SetEnabled(VARIANT_BOOL::from(enabled))?;
 
-            self.schedule.trigger = Some(i_weekly_trigger.into());
+            self.schedule.trigger = Some(i_weekly_trigger.cast::<ITrigger>()?);
         }
         Ok(self)
     }
@@ -1562,7 +1599,7 @@ impl ScheduleBuilder<Weekly> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_weekly_trigger: IWeeklyTrigger = i_trigger.cast::<IWeeklyTrigger>()?;
-                i_weekly_trigger.SetRandomDelay(delay)?;
+                i_weekly_trigger.SetRandomDelay(&BSTR::from(delay))?;
             }
             Ok(self)
         } else {
@@ -1573,10 +1610,10 @@ impl ScheduleBuilder<Weekly> {
 }
 
 fn trigger_uninitialised_error() -> Box<dyn std::error::Error> {
-    return Box::new(InvalidOperationError {
+    Box::new(InvalidOperationError {
         message: "Trigger has not been created yet. Consider calling ScheduleBuilder.Trigger()"
             .to_string(),
-    });
+    })
 }
 
 /* actions */
@@ -1591,7 +1628,7 @@ pub struct Action {
 }
 
 impl Action {
-    /// The work items performed by a task are called actions. A task can have a single action 
+    /// The work items performed by a task are called actions. A task can have a single action
     /// or a maximum of 32 actions. Be aware that when multiple actions are specified, they are executed sequentially.
     pub fn new(id: &str, path: &str, working_dir: &str, args: &str) -> Self {
         Self {
