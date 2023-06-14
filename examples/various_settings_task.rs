@@ -1,6 +1,10 @@
 use chrono::prelude::*;
 use planif::enums::TaskCreationFlags;
+<<<<<<< HEAD
 use planif::schedule_builder::{Action, ComRuntime, ScheduleBuilder};
+=======
+use planif::schedule_builder::{Action, ScheduleBuilder};
+>>>>>>> origin/main
 use planif::settings::Settings;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,5 +23,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .start_boundary(&Local::now().to_rfc3339())?
         .build()?
         .register("TaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
+
     Ok(())
 }

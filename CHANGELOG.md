@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Change namespaces for `TaskCreationFlags`
 * Bump version to 1.0
     * Bump windows dependency to 0.43.0 and fix related breaking changes
+* Add tests for `Duration` to_string() impl
+* Add ability to specify a folder for scheduled tasks
+* Update examples for in_folder()
 
 ### Breaking changes
 * Change `delay` methods to take durations instead of `str`
