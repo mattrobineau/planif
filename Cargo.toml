@@ -4,9 +4,9 @@ authors = ["Matt Robineau <matt@mrbn.ca>"]
 description = "planif is a builder pattern wrapper for the windows task scheduler API of windows-rs."
 license = "MIT"
 repository = "https://github.com/mattrobineau/planif"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
-keywords = ["scheduled", "task", "windows"]
+keywords = ["scheduled", "task", "windows", "schedule", "scheduler"]
 categories = ["os::windows-apis"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
