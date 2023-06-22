@@ -46,13 +46,15 @@ pub mod error;
 pub mod schedule;
 /// Build different [Schedules](schedule::Schedule) for the Windows Task Scheduler.
 pub mod schedule_builder;
-/// Enumerate scheduled tasks.
-pub mod schedule_getter;
+/// The base struct used to manage all the others.
+pub mod task_scheduler;
 /// Various settings available while building [Schedules](schedule::Schedule).
 pub mod settings;
 
 #[cfg(test)]
 mod tests {
+    use crate::task_scheduler::{ComRuntime, TaskScheduler};
+
 
     #[test]
     fn it_works() -> Result<(), Box<dyn std::error::Error>> {
@@ -61,7 +63,10 @@ mod tests {
         use chrono::prelude::*;
         use chrono::Duration;
 
-        ScheduleBuilder::new()?
+        let ts = TaskScheduler::new();
+
+        ts
+            .create_schedule()
             .create_time()
             .author("Test dummy")?
             .description("Test Time Trigger")?
@@ -76,6 +81,8 @@ mod tests {
             )?
             .build()?
             .register("TimeTaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
+
+        println!("{}", ts.get_schedule("\\Test folder\\TimeTaskName").path());
 
         Ok(())
     }

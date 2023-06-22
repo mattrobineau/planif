@@ -1,8 +1,8 @@
 use crate::{
     enums::{DayOfMonth, DayOfWeek, Month, WeekOfMonth},
     error::{InvalidOperationError, RequiredPropertyError},
-    schedule::Schedule,
-    settings::{Duration, PrincipalSettings, Settings},
+    schedule::{Schedule, Unregistered},
+    settings::{Duration, PrincipalSettings, Settings}, task_scheduler::ComRuntime,
 };
 use std::rc::Rc;
 use windows::core::ComInterface;
@@ -48,42 +48,12 @@ pub struct Time {}
 /// [`ScheduleBuilder<Weekly>`](ScheduleBuilder#impl-ScheduleBuilder<Weekly>)
 pub struct Weekly {}
 
-/// Represents a COM runtime required for building schedules tasks
-#[derive(Clone)]
-pub struct ComRuntime(Rc<Com>);
-
-impl ComRuntime {
-    /// Creates a COM runtime for use with one or more
-    /// [ScheduleBuilder]
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(ComRuntime(Rc::new(Com::initialize()?)))
-    }
-}
-
-struct Com;
-
-impl Com {
-    fn initialize() -> Result<Self, Box<dyn std::error::Error>> {
-        unsafe {
-            CoInitializeEx(None, COINIT_MULTITHREADED)?;
-        }
-        Ok(Com)
-    }
-}
-
-impl Drop for Com {
-    fn drop(&mut self) {
-        unsafe {
-            CoUninitialize();
-        }
-    }
-}
-
 /// A generic schedule builder used to create a specific builder.
 pub struct ScheduleBuilder<Frequency = Base> {
     pub(crate) frequency: std::marker::PhantomData<Frequency>,
     pub(crate) schedule: Schedule,
-    com: ComRuntime,
+    com_runtime: ComRuntime,
+    task_service: ITaskService
 }
 
 impl ScheduleBuilder<Base> {
@@ -95,17 +65,20 @@ impl ScheduleBuilder<Base> {
     /// let com = ComRuntime::new()?;
     /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new(&com).unwrap();
     /// ```
-    pub fn new(com: &ComRuntime) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(com: &ComRuntime, task_service: &ITaskService) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
             let sb_com = com.clone();
+            let sb_ts = task_service.clone();
 
-            let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
-            task_service.Connect(
-                VARIANT::default(),
-                VARIANT::default(),
-                VARIANT::default(),
-                VARIANT::default(),
-            )?;
+            let sch_com = com.clone();
+
+            // let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
+            // task_service.Connect(
+            //     VARIANT::default(),
+            //     VARIANT::default(),
+            //     VARIANT::default(),
+            //     VARIANT::default(),
+            // )?;
 
             let task_folder: ITaskFolder = task_service.GetFolder(&BSTR::from("\\"))?;
             let task_definition: ITaskDefinition = task_service.NewTask(0)?;
@@ -115,18 +88,21 @@ impl ScheduleBuilder<Base> {
             let settings: ITaskSettings = task_definition.Settings()?;
 
             Ok(Self {
-                com: sb_com,
+                com_runtime: sb_com,
                 frequency: std::marker::PhantomData::<Base>,
+                task_service: sb_ts,
                 schedule: Schedule {
+                    kind: std::marker::PhantomData::<Unregistered>,
                     task_folder,
                     actions,
                     force_start_boundary: false,
                     registration_info,
                     settings,
-                    task_service,
+                    // task_service,
                     task_definition,
                     trigger: None,
                     triggers,
+                    com_runtime: sch_com
                 },
             })
         }
@@ -145,9 +121,10 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_boot(self) -> ScheduleBuilder<Boot> {
         ScheduleBuilder::<Boot> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Boot>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -165,9 +142,10 @@ impl ScheduleBuilder<Base> {
     pub fn create_daily(mut self) -> ScheduleBuilder<Daily> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Daily> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Daily>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -185,9 +163,10 @@ impl ScheduleBuilder<Base> {
     pub fn create_event(mut self) -> ScheduleBuilder<Event> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Event> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Event>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -204,9 +183,10 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_idle(self) -> ScheduleBuilder<Idle> {
         ScheduleBuilder::<Idle> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Idle>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -223,9 +203,10 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_logon(self) -> ScheduleBuilder<Logon> {
         ScheduleBuilder::<Logon> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Logon>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -241,9 +222,10 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_monthly(self) -> ScheduleBuilder<Monthly> {
         ScheduleBuilder::<Monthly> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Monthly>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -260,9 +242,10 @@ impl ScheduleBuilder<Base> {
     pub fn create_monthly_dow(mut self) -> ScheduleBuilder<MonthlyDOW> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<MonthlyDOW> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<MonthlyDOW>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -278,9 +261,10 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_registration(self) -> ScheduleBuilder<Registration> {
         ScheduleBuilder::<Registration> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Registration>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -298,9 +282,10 @@ impl ScheduleBuilder<Base> {
     pub fn create_time(mut self) -> ScheduleBuilder<Time> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Time> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Time>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 
@@ -317,9 +302,10 @@ impl ScheduleBuilder<Base> {
     /// ```
     pub fn create_weekly(self) -> ScheduleBuilder<Weekly> {
         ScheduleBuilder::<Weekly> {
-            com: self.com,
+            com_runtime: self.com_runtime,
             frequency: std::marker::PhantomData::<Weekly>,
             schedule: self.schedule,
+            task_service: self.task_service
         }
     }
 }
@@ -344,10 +330,9 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         unsafe {
             // check if folder exists, if not make it
             self.schedule.task_folder =
-                match self.schedule.task_service.GetFolder(&BSTR::from(folder)) {
+                match self.task_service.GetFolder(&BSTR::from(folder)) {
                     Ok(x) => x,
                     Err(_) => self
-                        .schedule
                         .task_service
                         .GetFolder(&BSTR::from("\\"))
                         .unwrap()
