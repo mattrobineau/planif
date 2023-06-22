@@ -1,10 +1,15 @@
 use chrono::prelude::*;
 use planif::enums::TaskCreationFlags;
+<<<<<<< HEAD
+use planif::schedule_builder::{Action, ComRuntime, ScheduleBuilder};
+=======
 use planif::schedule_builder::{Action, ScheduleBuilder};
+>>>>>>> origin/main
 use planif::settings::Settings;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sb = ScheduleBuilder::new().unwrap();
+    let com = ComRuntime::new()?;
+    let sb = ScheduleBuilder::new(&com).unwrap();
     let mut settings = Settings::new();
     settings.run_only_if_idle = Some(true);
 

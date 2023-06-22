@@ -2,8 +2,9 @@ use crate::{
     enums::{DayOfMonth, DayOfWeek, Month, WeekOfMonth},
     error::{InvalidOperationError, RequiredPropertyError},
     schedule::Schedule,
-    settings::{PrincipalSettings, Settings},
+    settings::{Duration, PrincipalSettings, Settings},
 };
+use std::rc::Rc;
 use windows::core::ComInterface;
 use windows::core::BSTR;
 use windows::Win32::Foundation::VARIANT_BOOL;
@@ -24,46 +25,79 @@ use windows::Win32::System::TaskScheduler::{
 /* triggers */
 /// Marker type for base [`ScheduleBuilder<Base>`]
 pub struct Base {}
-/// Marker type for boot [`ScheduleBuilder<Boot>`]
+/// Marker type for boot [`ScheduleBuilder<Boot>`](ScheduleBuilder#impl-ScheduleBuilder<Boot>)
 pub struct Boot {}
-/// Marker type for a daily [`ScheduleBuilder<Daily>`]
+/// Marker type for a daily [`ScheduleBuilder<Daily>`](ScheduleBuilder#impl-ScheduleBuilder<Daily>)
 pub struct Daily {}
-/// Marker type for an event [`ScheduleBuilder<Event>`]
+/// Marker type for an event [`ScheduleBuilder<Event>`](ScheduleBuilder#impl-ScheduleBuilder<Event>)
 pub struct Event {}
-/// Marker type for an idle [`ScheduleBuilder<Idle>`]
+/// Marker type for an idle [`ScheduleBuilder<Idle>`](ScheduleBuilder#impl-ScheduleBuilder<Idle>)
 pub struct Idle {}
-/// Marker type for a logon [`ScheduleBuilder<Logon>`]
+/// Marker type for a logon [`ScheduleBuilder<Logon>`](ScheduleBuilder#impl-ScheduleBuilder<Logon>)
 pub struct Logon {}
-/// Marker type for a monthly [`ScheduleBuilder<Monthly>`]
+/// Marker type for a monthly
+/// [`ScheduleBuilder<Monthly>`](ScheduleBuilder#impl-ScheduleBuilder<Monthly>)
 pub struct Monthly {}
-/// Marker type for a monthly day of week [`ScheduleBuilder<MonthlyDOW>`]
+/// Marker type for a monthly day of week [`ScheduleBuilder<MonthlyDOW>`](ScheduleBuilder#impl-ScheduleBuilder<MonthlyDOW>)
 pub struct MonthlyDOW {}
-/// Marker type for registration [`ScheduleBuilder<Registration>`]
+/// Marker type for registration [`ScheduleBuilder<Registration>`](ScheduleBuilder#impl-ScheduleBuilder<Registration>)
 pub struct Registration {}
-/// Marker type for a time [`ScheduleBuilder<Time>`]
+/// Marker type for a time [`ScheduleBuilder<Time>`](ScheduleBuilder#impl-ScheduleBuilder<Time>)
 pub struct Time {}
-/// Marker type for a weekly [`ScheduleBuilder<Weekly>`]
+/// Marker type for a weekly
+/// [`ScheduleBuilder<Weekly>`](ScheduleBuilder#impl-ScheduleBuilder<Weekly>)
 pub struct Weekly {}
 
-#[derive(Debug)]
-#[doc(hidden)]
+/// Represents a COM runtime required for building schedules tasks
+#[derive(Clone)]
+pub struct ComRuntime(Rc<Com>);
+
+impl ComRuntime {
+    /// Creates a COM runtime for use with one or more
+    /// [ScheduleBuilder]
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(ComRuntime(Rc::new(Com::initialize()?)))
+    }
+}
+
+struct Com;
+
+impl Com {
+    fn initialize() -> Result<Self, Box<dyn std::error::Error>> {
+        unsafe {
+            CoInitializeEx(None, COINIT_MULTITHREADED)?;
+        }
+        Ok(Com)
+    }
+}
+
+impl Drop for Com {
+    fn drop(&mut self) {
+        unsafe {
+            CoUninitialize();
+        }
+    }
+}
+
+/// A generic schedule builder used to create a specific builder.
 pub struct ScheduleBuilder<Frequency = Base> {
     pub(crate) frequency: std::marker::PhantomData<Frequency>,
     pub(crate) schedule: Schedule,
+    com: ComRuntime,
 }
 
 impl ScheduleBuilder<Base> {
     /// Create a new base builder.
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ Base, ScheduleBuilder };
+    /// use planif::schedule_builder::{ Base, ComRuntime, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new().unwrap();
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new(&com).unwrap();
     /// ```
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(com: &ComRuntime) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
-            // On error of unsafe, CoUnintialize!
-            CoInitializeEx(None, COINIT_MULTITHREADED)?;
+            let sb_com = com.clone();
 
             let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
             task_service.Connect(
@@ -81,6 +115,7 @@ impl ScheduleBuilder<Base> {
             let settings: ITaskSettings = task_definition.Settings()?;
 
             Ok(Self {
+                com: sb_com,
                 frequency: std::marker::PhantomData::<Base>,
                 schedule: Schedule {
                     task_folder,
@@ -102,13 +137,15 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Boot, ScheduleBuilder };
+    /// use planif::schedule_builder::{ Boot, ComRuntime, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_boot();
     /// ```
     pub fn create_boot(self) -> ScheduleBuilder<Boot> {
         ScheduleBuilder::<Boot> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Boot>,
             schedule: self.schedule,
         }
@@ -119,14 +156,16 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Daily, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Daily, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily();
     /// ```
     pub fn create_daily(mut self) -> ScheduleBuilder<Daily> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Daily> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Daily>,
             schedule: self.schedule,
         }
@@ -137,14 +176,16 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Event, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Event, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_event();
     /// ```
     pub fn create_event(mut self) -> ScheduleBuilder<Event> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Event> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Event>,
             schedule: self.schedule,
         }
@@ -155,13 +196,15 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Idle, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Idle, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Idle> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Idle> = ScheduleBuilder::new(&com).unwrap()
     ///         .create_idle();
     /// ```
     pub fn create_idle(self) -> ScheduleBuilder<Idle> {
         ScheduleBuilder::<Idle> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Idle>,
             schedule: self.schedule,
         }
@@ -172,13 +215,15 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ Logon, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Logon, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_logon();
     /// ```
     pub fn create_logon(self) -> ScheduleBuilder<Logon> {
         ScheduleBuilder::<Logon> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Logon>,
             schedule: self.schedule,
         }
@@ -188,13 +233,15 @@ impl ScheduleBuilder<Base> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ Monthly, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Monthly, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly();
     /// ```
     pub fn create_monthly(self) -> ScheduleBuilder<Monthly> {
         ScheduleBuilder::<Monthly> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Monthly>,
             schedule: self.schedule,
         }
@@ -204,14 +251,16 @@ impl ScheduleBuilder<Base> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ MonthlyDOW, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, MonthlyDOW, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow();
     /// ```
     pub fn create_monthly_dow(mut self) -> ScheduleBuilder<MonthlyDOW> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<MonthlyDOW> {
+            com: self.com,
             frequency: std::marker::PhantomData::<MonthlyDOW>,
             schedule: self.schedule,
         }
@@ -221,13 +270,15 @@ impl ScheduleBuilder<Base> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ Registration, ScheduleBuilder };
+    /// use planif::schedule_builder::{ ComRuntime, Registration, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_registration();
     /// ```
     pub fn create_registration(self) -> ScheduleBuilder<Registration> {
         ScheduleBuilder::<Registration> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Registration>,
             schedule: self.schedule,
         }
@@ -238,14 +289,16 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Time };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Time };
     ///
-    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_time();
     /// ```
     pub fn create_time(mut self) -> ScheduleBuilder<Time> {
         self.schedule.force_start_boundary = true;
         ScheduleBuilder::<Time> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Time>,
             schedule: self.schedule,
         }
@@ -256,13 +309,15 @@ impl ScheduleBuilder<Base> {
     /// # Example
     ///
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly();
     /// ```
     pub fn create_weekly(self) -> ScheduleBuilder<Weekly> {
         ScheduleBuilder::<Weekly> {
+            com: self.com,
             frequency: std::marker::PhantomData::<Weekly>,
             schedule: self.schedule,
         }
@@ -327,9 +382,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .author("Alice").unwrap()
@@ -349,9 +405,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .author("Alice").unwrap()
@@ -378,9 +435,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -395,45 +453,35 @@ impl<Frequency> ScheduleBuilder<Frequency> {
         Ok(self)
     }
 
-    /// Closes the COM library on the current thread, unloads all DLLs loaded
-    /// by the thread, frees any other resources that the thread maintains, and
-    /// forces all RPC connections on the thread to close.
-    pub fn uninitialize(self) {
-        unsafe {
-            CoUninitialize();
-        }
-    }
-
     /// The amount of time that is allowed to complete the task.
-    /// The format for this string is PnYnMnDTnHnMnS, where nY is the number of years,
-    /// nM is the number of months, nD is the number of days, 'T' is the date/time separator,
-    /// nH is the number of hours, nM is the number of minutes, and nS is the number of
-    /// seconds (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies one month,
-    /// four days, two hours, and five minutes). A value of PT0S will enable the task to run indefinitely.
     ///
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
-    ///     .execution_time_limit("PT5M").unwrap()
+    ///     .execution_time_limit(Duration {
+    ///         minutes: Some(5),
+    ///         ..Default::default()
+    ///         }
+    ///     ).unwrap()
     ///     .build().unwrap();
     /// ```
     pub fn execution_time_limit(
         self,
-        time_limit: &str,
+        time_limit: Duration,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
-                trigger.SetExecutionTimeLimit(&BSTR::from(time_limit))?;
+                trigger.SetExecutionTimeLimit(&BSTR::from(time_limit.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -449,9 +497,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -466,7 +515,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             self.schedule.force_start_boundary = false;
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -481,9 +529,10 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -497,7 +546,6 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -516,16 +564,11 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ///
     /// # Parameters
     /// ## duration
-    /// How long the pattern is repeated. The format for this string is PnYnMnDTnHnMnS, where nY is
-    /// the number of years, nM is the number of months, nD is the number of days, 'T' is the date/time
-    /// separator, nH is the number of hours, nM is the number of minutes, and nS is the number of seconds
-    /// (for example, PT5M specifies 5 minutes and P1M4DT2H5M specifies one month, four days, two hours,
-    /// and five minutes). The minimum time allowed is one minute.
+    /// How long the pattern is repeated.
+    /// The minimum time allowed for a Windows Scheduled Task is one minute.
     ///
     /// ## interval
-    /// The amount of time between each restart of the task. The format for this string is
-    /// P<days>DT<hours>H<minutes>M<seconds>S (for example, "PT5M" is 5 minutes, "PT1H" is 1 hour, and "PT20M"
-    /// is 20 minutes). The maximum time allowed is 31 days, and the minimum time allowed is 1 minute.
+    /// The amount of time between each restart of the task.
     ///
     /// # stop_at_duration_end
     /// A Boolean value that indicates if a running instance of the task is stopped at the end of the repetition
@@ -536,31 +579,39 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// # Example
     /// ```
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
-    ///     .repetition("PT5M", "PT1H", true).unwrap()
+    ///     .repetition(Duration {
+    ///             minutes: Some(5),
+    ///             ..Default::default()
+    ///         },
+    ///         Duration {
+    ///             hours: 1,
+    ///             ..Default::default()
+    ///         },
+    ///         true).unwrap()
     ///     .build().unwrap();
     /// ```
     pub fn repetition(
         self,
-        duration: &str,
-        interval: &str,
+        duration: Duration,
+        interval: Duration,
         stop_at_duration_end: bool,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let repetition: IRepetitionPattern = trigger.Repetition()?;
-                repetition.SetDuration(&BSTR::from(duration))?;
-                repetition.SetInterval(&BSTR::from(interval))?;
+                repetition.SetDuration(&BSTR::from(duration.to_string()))?;
+                repetition.SetInterval(&BSTR::from(interval.to_string()))?;
                 repetition.SetStopAtDurationEnd(VARIANT_BOOL::from(stop_at_duration_end))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -576,7 +627,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// ```
     /// use planif::settings::{ PrincipalSettings, RunLevel, LogonType };
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
     /// let settings = PrincipalSettings {
     ///     display_name: "Planif".to_string(),
@@ -587,7 +638,8 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     ///     user_id: Some("MyServiceAccount".to_string()),
     /// };
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -626,12 +678,13 @@ impl<Frequency> ScheduleBuilder<Frequency> {
     /// ```
     /// use planif::settings::{ Settings };
     /// use planif::schedule::Schedule;
-    /// use planif::schedule_builder::ScheduleBuilder;
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder };
     ///
     /// let settings = Settings::new();
     /// settings.allow_demand_start = Some(true);
     ///
-    /// let schedule: Schedule = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let schedule: Schedule = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("DailyTrigger", true).unwrap()
     ///     .description("This is my trigger").unwrap()
@@ -649,7 +702,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
 
                 #[allow(deprecated)]
                 if let Some(setting) = s.idle_duration {
-                    idle_settings.SetIdleDuration(&BSTR::from(setting))?;
+                    idle_settings.SetIdleDuration(&BSTR::from(setting.to_string()))?;
                 }
 
                 if let Some(setting) = s.restart_on_idle {
@@ -662,7 +715,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
 
                 #[allow(deprecated)]
                 if let Some(setting) = s.wait_timeout {
-                    idle_settings.SetWaitTimeout(&BSTR::from(setting))?;
+                    idle_settings.SetWaitTimeout(&BSTR::from(setting.to_string()))?;
                 }
 
                 task_settings.SetIdleSettings(&idle_settings)?;
@@ -690,7 +743,7 @@ impl<Frequency> ScheduleBuilder<Frequency> {
             }
 
             if let Some(s) = settings.delete_expired_task_after {
-                task_settings.SetDeleteExpiredTaskAfter(&BSTR::from(s))?;
+                task_settings.SetDeleteExpiredTaskAfter(&BSTR::from(s.to_string()))?;
             }
 
             if let Some(s) = settings.disallow_start_if_on_batteries {
@@ -764,9 +817,10 @@ impl ScheduleBuilder<Boot> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Boot };
+    /// use planif::schedule_builder::{ Boot, ComRuntime, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_boot()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -785,28 +839,27 @@ impl ScheduleBuilder<Boot> {
     }
 
     /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/logontrigger-delay>
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Boot };
+    /// use planif::schedule_builder::{ Boot, ComRuntime, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Boot> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_boot()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .delay("P2DT5S").unwrap();
+    ///     .delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
     /// ```
-    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_boot_trigger: IBootTrigger = trigger.cast::<IBootTrigger>()?;
-                i_boot_trigger.SetDelay(&BSTR::from(delay))?;
+                i_boot_trigger.SetDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -820,9 +873,10 @@ impl ScheduleBuilder<Daily> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Daily };
+    /// use planif::schedule_builder::{ ComRuntime, Daily, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -842,9 +896,10 @@ impl ScheduleBuilder<Daily> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Daily };
+    /// use planif::schedule_builder::{ ComRuntime, Daily, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .days_interval(1).unwrap();
@@ -857,33 +912,31 @@ impl ScheduleBuilder<Daily> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Daily };
+    /// use planif::schedule_builder::{ ComRuntime, Daily, ScheduleBuilder };
     ///
-    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Daily> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_daily()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_daily_trigger: IDailyTrigger = i_trigger.cast::<IDailyTrigger>()?;
-                i_daily_trigger.SetRandomDelay(&BSTR::from(delay))?;
+                i_daily_trigger.SetRandomDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -891,28 +944,27 @@ impl ScheduleBuilder<Daily> {
 
 impl ScheduleBuilder<Event> {
     /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/eventtrigger-delay>
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Event };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Event };
     ///
-    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_event()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .delay("P2DT5S").unwrap();
+    ///     .delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
     /// ```
-    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_event_trigger: IEventTrigger = trigger.cast::<IEventTrigger>()?;
-                i_event_trigger.SetDelay(&BSTR::from(delay))?;
+                i_event_trigger.SetDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -931,7 +983,6 @@ impl ScheduleBuilder<Event> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -940,9 +991,10 @@ impl ScheduleBuilder<Event> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Event };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Event };
     ///
-    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Event> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_event()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -979,7 +1031,6 @@ impl ScheduleBuilder<Event> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -990,9 +1041,10 @@ impl ScheduleBuilder<Idle> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Idle };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Idle };
     ///
-    /// let builder: ScheduleBuilder<Idle> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Idle> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_idle()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1013,9 +1065,10 @@ impl ScheduleBuilder<Logon> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Logon };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Logon };
     ///
-    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_logon()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1032,28 +1085,27 @@ impl ScheduleBuilder<Logon> {
     }
 
     /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/logontrigger-delay>
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Logon };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Logon };
     ///
-    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_logon()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .delay("P2DT5S").unwrap();
+    ///     .delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();
     /// ```
-    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_logon_trigger: ILogonTrigger = trigger.cast::<ILogonTrigger>()?;
-                i_logon_trigger.SetDelay(&BSTR::from(delay))?;
+                i_logon_trigger.SetDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1068,9 +1120,10 @@ impl ScheduleBuilder<Logon> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Logon };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Logon };
     ///
-    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Logon> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_logon()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .user_id("MyDomain\\User").unwrap();
@@ -1083,7 +1136,6 @@ impl ScheduleBuilder<Logon> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1094,9 +1146,10 @@ impl ScheduleBuilder<Monthly> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfMonth;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .days_of_month(vec![DayOfMonth::Day(1), DayOfMonth::Day(15),
@@ -1105,7 +1158,7 @@ impl ScheduleBuilder<Monthly> {
     pub fn days_of_month(self, days: Vec<DayOfMonth>) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             let is_out_of_bounds = days.iter().any(|x| match &x {
-                DayOfMonth::Day(int) => int < &1 || int > &31,
+                DayOfMonth::Day(int) => !(&1..=&31).contains(&int),
                 DayOfMonth::Last => false,
             });
 
@@ -1129,7 +1182,6 @@ impl ScheduleBuilder<Monthly> {
 
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1138,9 +1190,10 @@ impl ScheduleBuilder<Monthly> {
     /// # Example
     /// ```
     /// use planif::enums::Month;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .months_of_year(vec![Month::January, Month::June, Month::December]).unwrap();
@@ -1156,33 +1209,31 @@ impl ScheduleBuilder<Monthly> {
 
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration { days: Some(2), seconds: Some(5) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_monthly_trigger: IMonthlyTrigger = i_trigger.cast::<IMonthlyTrigger>()?;
-                i_monthly_trigger.SetRandomDelay(&BSTR::from(delay))?;
+                i_monthly_trigger.SetRandomDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1192,9 +1243,10 @@ impl ScheduleBuilder<Monthly> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .run_on_last_day(true).unwrap();
@@ -1207,7 +1259,6 @@ impl ScheduleBuilder<Monthly> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1216,9 +1267,10 @@ impl ScheduleBuilder<Monthly> {
     /// days of specific months
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Monthly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Monthly };
     ///
-    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1241,9 +1293,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfWeek;
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MonthlyDOWTrigger", true).unwrap()
     ///     .days_of_week(vec![DayOfWeek::Sunday, DayOfWeek::Thursday]).unwrap();
@@ -1258,7 +1311,6 @@ impl ScheduleBuilder<MonthlyDOW> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1267,9 +1319,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// # Example
     /// ```
     /// use planif::enums::Month;
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .months_of_year(vec![Month::January, Month::June, Month::December]).unwrap();
@@ -1286,34 +1339,32 @@ impl ScheduleBuilder<MonthlyDOW> {
 
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration { seconds: Some(2), days: Some(5) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_monthly_dow_trigger: IMonthlyDOWTrigger =
                     i_trigger.cast::<IMonthlyDOWTrigger>()?;
-                i_monthly_dow_trigger.SetRandomDelay(&BSTR::from(delay))?;
+                i_monthly_dow_trigger.SetRandomDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1323,9 +1374,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .run_on_last_week(true).unwrap();
@@ -1339,7 +1391,6 @@ impl ScheduleBuilder<MonthlyDOW> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1349,9 +1400,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     /// # Example
     /// ```
     /// use planif::enums::WeekOfMonth;
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .weeks_of_month(vec![WeekOfMonth::Third]).unwrap();
@@ -1369,7 +1421,6 @@ impl ScheduleBuilder<MonthlyDOW> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1379,9 +1430,10 @@ impl ScheduleBuilder<MonthlyDOW> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, MonthlyDOW };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, MonthlyDOW };
     ///
-    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_monthly_dow()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1399,29 +1451,31 @@ impl ScheduleBuilder<MonthlyDOW> {
 
 impl ScheduleBuilder<Registration> {
     /// Specifies a value that indicates the amount of time between when the user logs on and when the task is started.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/registrationtrigger-delay>
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Registration };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Registration };
     ///
-    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_registration()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .delay("PT5M").unwrap();
+    ///     .delay(Duration {
+    ///         minutes: Some(5),
+    ///         ..Default::default()
+    ///     }).unwrap();
     /// ```
-    pub fn delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(trigger) = &self.schedule.trigger {
             unsafe {
                 let i_registration_trigger: IRegistrationTrigger =
                     trigger.cast::<IRegistrationTrigger>()?;
-                i_registration_trigger.SetDelay(&BSTR::from(delay))?;
+                i_registration_trigger.SetDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1430,9 +1484,10 @@ impl ScheduleBuilder<Registration> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Registration };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Registration };
     ///
-    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Registration> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_registration()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1458,9 +1513,10 @@ impl ScheduleBuilder<Time> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Time };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Time };
     ///
-    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_time()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1477,28 +1533,27 @@ impl ScheduleBuilder<Time> {
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Time };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Time };
     ///
-    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Time> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_time()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration {days: Some(2), seconds: Some(5) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_time_trigger: ITimeTrigger = i_trigger.cast::<ITimeTrigger>()?;
-                i_time_trigger.SetRandomDelay(&BSTR::from(delay))?;
+                i_time_trigger.SetRandomDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1510,9 +1565,10 @@ impl ScheduleBuilder<Weekly> {
     ///
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap();
     /// ```
@@ -1533,9 +1589,10 @@ impl ScheduleBuilder<Weekly> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfWeek;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .days_of_week(vec![DayOfWeek::Sunday, DayOfWeek::Thursday]).unwrap();
@@ -1549,7 +1606,6 @@ impl ScheduleBuilder<Weekly> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
@@ -1560,9 +1616,10 @@ impl ScheduleBuilder<Weekly> {
     /// # Example
     /// ```
     /// use planif::enums::DayOfWeek;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap()
     ///     .weeks_interval(1).unwrap();
@@ -1575,35 +1632,33 @@ impl ScheduleBuilder<Weekly> {
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }
 
     /// Specifies the delay time that is randomly added to the start time of the trigger.
-    /// The format for this string is P<days>DT<hours>H<minutes>M<seconds>S (for example, P2DT5S is a 2 day, 5 second delay).
     ///
     /// See <https://docs.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-randomdelay-timetriggertype-element>
     ///
     /// # Example
     /// ```
     /// use planif::enums::DayOfWeek;
-    /// use planif::schedule_builder::{ ScheduleBuilder, Weekly };
+    /// use planif::schedule_builder::{ ComRuntime, ScheduleBuilder, Weekly };
     ///
-    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new().unwrap()
+    /// let com = ComRuntime::new()?;
+    /// let builder: ScheduleBuilder<Weekly> = ScheduleBuilder::new(&com).unwrap()
     ///     .create_weekly()
     ///     .trigger("MyTrigger", true).unwrap()
-    ///     .random_delay("P2DT5S").unwrap();
+    ///     .random_delay(Duration { seconds: Some(5), days: Some(2) }).unwrap();
     /// ```
-    pub fn random_delay(self, delay: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn random_delay(self, delay: Duration) -> Result<Self, Box<dyn std::error::Error>> {
         if let Some(i_trigger) = &self.schedule.trigger {
             unsafe {
                 let i_weekly_trigger: IWeeklyTrigger = i_trigger.cast::<IWeeklyTrigger>()?;
-                i_weekly_trigger.SetRandomDelay(&BSTR::from(delay))?;
+                i_weekly_trigger.SetRandomDelay(&BSTR::from(delay.to_string()))?;
             }
             Ok(self)
         } else {
-            self.uninitialize();
             Err(trigger_uninitialised_error())
         }
     }

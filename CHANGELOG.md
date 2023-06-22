@@ -8,13 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * Add `Duration` struct to ease usage of delays and other methods using string duration formats
+* Add Default impl for `Duration`
+* Add tests for `Duration` to_string() impl
+* Add example for multiple builders reusing a com runtime
+* Change namespaces for `TaskCreationFlags`
+* Bump version to 1.0
+    * Bump windows dependency to 0.43.0 and fix related breaking changes
 * Add tests for `Duration` to_string() impl
 * Add ability to specify a folder for scheduled tasks
+* Update examples for in_folder()
+
+### Breaking changes
+* Change `delay` methods to take durations instead of `str`
+* Change `schedule_builder`s to take in a ComRuntime when creating them.
+    * ComRuntime allows users to create multiple builders while reusing the com and stops users from accidentally
+      dropping the com
 
 ## [0.2.1]
 ### Updated
 * Update documentation, add deny missing_docs
-* Update examples for in_folder()
 
 ## [0.2.0] - 2022-10-09
 
