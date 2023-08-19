@@ -1,6 +1,6 @@
 use windows::core::BSTR;
 use windows::Win32::System::TaskScheduler::{
-    IActionCollection, IRegistrationInfo, ITaskDefinition, ITaskFolder, ITaskService,
+    IActionCollection, IRegistrationInfo, ITaskDefinition, ITaskFolder,
     ITaskSettings, ITrigger, ITriggerCollection, TASK_LOGON_INTERACTIVE_TOKEN,
 };
 use windows::Win32::System::Com::VARIANT;
@@ -21,9 +21,9 @@ pub struct Schedule<Kind = Unregistered> {
     pub(crate) task_folder: ITaskFolder,
     pub(crate) actions: IActionCollection,
     pub(crate) force_start_boundary: bool,
-    pub(crate) registration_info: IRegistrationInfo,
+    pub(crate) registration_info: IRegistrationInfo, // maybe just this? since taskdef can come form it
     pub(crate) settings: ITaskSettings,
-    pub(crate) task_definition: ITaskDefinition,
+    pub(crate) task_definition: ITaskDefinition, 
     // pub(crate) task_service: ITaskService,
     pub(crate) trigger: Option<ITrigger>,
     pub(crate) triggers: ITriggerCollection,
@@ -86,14 +86,16 @@ impl TaskScheduler {
 }
 
 impl Schedule<Registered> {
-    /// tesst
-    pub fn test() -> bool {
-        true
-    }
     /// more test
     pub fn path(&self) -> String {
         unsafe {
             self.task_folder.Path().unwrap().to_string()
+        }
+    }
+
+    pub fn delete(self) {
+        unsafe {
+            self.task_folder.DeleteTask(self.)
         }
     }
 }

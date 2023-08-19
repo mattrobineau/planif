@@ -46,27 +46,22 @@ pub mod error;
 pub mod schedule;
 /// Build different [Schedules](schedule::Schedule) for the Windows Task Scheduler.
 pub mod schedule_builder;
-/// The base struct used to manage all the others.
-pub mod task_scheduler;
 /// Various settings available while building [Schedules](schedule::Schedule).
 pub mod settings;
+/// The base struct used to manage all the others.
+pub mod task_scheduler;
 /// Com
 pub mod com;
 
 #[cfg(test)]
 mod tests {
-    use crate::task_scheduler::{ComRuntime, TaskScheduler};
+    use chrono::{Duration, Local};
 
+    use crate::{task_scheduler::{TaskScheduler}, enums::TaskCreationFlags, schedule_builder::Action};
 
     #[test]
     fn it_works() -> Result<(), Box<dyn std::error::Error>> {
-        use crate::enums::TaskCreationFlags;
-        use crate::schedule_builder::{Action, ScheduleBuilder};
-        use chrono::prelude::*;
-        use chrono::Duration;
-
         let ts = TaskScheduler::new();
-
         ts
             .create_schedule()
             .create_time()
@@ -85,6 +80,11 @@ mod tests {
             .register("TimeTaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
 
         println!("{}", ts.get_schedule("\\Test folder\\TimeTaskName").path());
+
+        // ts.get_schedules_from_folder("Mozilla")
+        //     .unwrap()
+        //     .into_iter()
+        //     .for_each(|x| println!("{}", x.path()));
 
         Ok(())
     }

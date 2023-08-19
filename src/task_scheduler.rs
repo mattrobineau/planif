@@ -10,65 +10,6 @@ use crate::schedule::Schedule;
 use crate::schedule_builder::Base;
 use crate::schedule_builder::ScheduleBuilder;
 
-struct ScheduleGetter {
-    task_service: ITaskService,
-}
-
-impl ScheduleGetter {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        unsafe {
-            // On error of unsafe, CoUnintialize!
-            CoInitializeEx(None, COINIT_MULTITHREADED)?;
-
-            let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
-            task_service.Connect(
-                VARIANT::default(),
-                VARIANT::default(),
-                VARIANT::default(),
-                VARIANT::default(),
-            )?;
-
-            Ok(Self { task_service })
-        }
-    }
-
-    pub fn get_folder_tasks(
-        &self,
-        folder_name: &str,
-    ) -> Result<Option<Vec<IRegisteredTask>>, windows::core::Error> {
-        unsafe {
-            // Get the task folder.
-            let task_folder = self.task_service.GetFolder(&BSTR::from(folder_name))?;
-
-            let task_collection = task_folder.GetTasks(TASK_ENUM_HIDDEN.0)?;
-            let task_num = task_collection.Count()?;
-
-            if task_num == 0 {
-                return Ok(None);
-            }
-
-            let mut tasks = Vec::with_capacity(task_num as usize);
-
-            for i in 0..task_num {
-                let index = VARIANT {
-                    Anonymous: VARIANT_0 {
-                        Anonymous: ManuallyDrop::new(VARIANT_0_0 {
-                            vt: VT_I4,
-                            wReserved1: 0,
-                            wReserved2: 0,
-                            wReserved3: 0,
-                            Anonymous: VARIANT_0_0_0 { lVal: i + 1 },
-                        }),
-                    },
-                };
-
-                tasks.push(task_collection.get_Item(index)?);
-            }
-            Ok(Some(tasks))
-        }
-    }
-}
-
 // new plan
 // TaskScheduler struct which represents...the service?
 // can Get() a Schedule - an individual task
@@ -86,8 +27,9 @@ impl ScheduleGetter {
 
 // when you get a schedule its mostly valid
 // it
+
 /// Represents a COM runtime required for building [`TaskScheduler`s](task_scheduler::TaskScheduler)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct ComRuntime(Rc<Com>);
 
 impl ComRuntime {
@@ -97,6 +39,25 @@ impl ComRuntime {
         Ok(ComRuntime(Rc::new(Com::initialize()?)))
     }
 }
+
+impl Clone for ComRuntime {
+    fn clone(&self) -> Self {
+        ComRuntime(Rc::clone(&self.0))
+    }
+}
+
+// impl Drop for ComRuntime {
+//     fn drop(&mut self) {
+//         if Rc::strong_count(&self.0) == 1 {
+//             println!("go time");
+//             unsafe {
+//                 CoUninitialize();
+//             }
+//         } else {
+//             println!("not time yet");
+//         }
+//     }
+// }
 
 #[derive(Debug, PartialEq)]
 struct Com;
@@ -114,6 +75,7 @@ impl Com {
 
 impl Drop for Com {
     fn drop(&mut self) {
+        println!("dropping com");
         unsafe {
             CoUninitialize();
         }
@@ -122,8 +84,8 @@ impl Drop for Com {
 
 /// The base struct, used for making Schedules and getting them
 pub struct TaskScheduler {
-    com_runtime: ComRuntime,
     task_service: ITaskService,
+    com_runtime: ComRuntime,
 }
 
 impl TaskScheduler {
@@ -161,6 +123,7 @@ impl TaskScheduler {
         let folder;
         let name;
 
+        // if the name has no \, it is assumed to be in the root folder
         match path.rsplit_once('\\') {
             Some(x) if x.0.is_empty() => (folder, name) = ("\\", x.1),
             Some(x) => (folder, name) = x,
@@ -193,6 +156,61 @@ impl TaskScheduler {
                 triggers,
                 com_runtime,
             }
+        }
+    }
+
+    /// Gets all the schedules in a folder
+    pub fn get_schedules_from_folder(&self, folder: &str) -> Option<Vec<Schedule<Registered>>> {
+        unsafe {
+            // TODO: match on "task not existing"
+            let task_folder = self.task_service.GetFolder(&BSTR::from(folder)).unwrap();
+
+            let task_collection = task_folder.GetTasks(TASK_ENUM_HIDDEN.0).unwrap();
+            let task_num = task_collection.Count().unwrap();
+
+            if task_num == 0 {
+                return None;
+            }
+
+            let mut schedules = Vec::with_capacity(task_num as usize);
+
+            for i in 0..task_num {
+                let index = VARIANT {
+                    Anonymous: VARIANT_0 {
+                        Anonymous: ManuallyDrop::new(VARIANT_0_0 {
+                            vt: VT_I4,
+                            wReserved1: 0,
+                            wReserved2: 0,
+                            wReserved3: 0,
+                            Anonymous: VARIANT_0_0_0 { lVal: i + 1 },
+                        }),
+                    },
+                };
+
+                let com_runtime = self.com_runtime.clone();
+                let registered_task = task_collection.get_Item(index).unwrap();
+
+                let task_definition = registered_task.Definition().unwrap();
+                let registration_info = task_definition.RegistrationInfo().unwrap();
+                let actions = task_definition.Actions().unwrap();
+                let settings = task_definition.Settings().unwrap();
+                let triggers = task_definition.Triggers().unwrap();
+
+                schedules.push(Schedule::<Registered> {
+                    kind: std::marker::PhantomData::<Registered>,
+                    task_folder: task_folder.clone(),
+                    task_definition,
+                    registration_info,
+                    actions,
+                    force_start_boundary: false,
+                    settings,
+                    trigger: None,
+                    triggers,
+                    com_runtime,
+                });
+            }
+
+            Some(schedules)
         }
     }
 }

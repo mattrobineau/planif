@@ -5,6 +5,10 @@ use crate::{
     settings::{Duration, PrincipalSettings, Settings}, task_scheduler::ComRuntime,
     com::ComRuntime,
 };
+
+use windows::core::ComInterface;
+use windows::core::BSTR;
+use windows::Win32::Foundation::VARIANT_BOOL;
 use windows::Win32::System::Com::{
     CoCreateInstance, CLSCTX_ALL, VARIANT,
 };
@@ -14,8 +18,7 @@ use windows::Win32::System::TaskScheduler::{
     IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IExecAction,
     IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, INetworkSettings, IPrincipal,
     IRegistrationInfo, IRegistrationTrigger, IRepetitionPattern, ITaskDefinition, ITaskFolder,
-    ITaskService, ITaskSettings, ITimeTrigger, ITrigger, ITriggerCollection, IWeeklyTrigger,
-    TaskScheduler, TASK_ACTION_EXEC, TASK_LOGON_TYPE, TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT,
+    ITaskService, ITaskSettings, ITimeTrigger, ITrigger, ITriggerCollection, IWeeklyTrigger, TASK_ACTION_EXEC, TASK_LOGON_TYPE, TASK_RUNLEVEL_TYPE, TASK_TRIGGER_BOOT,
     TASK_TRIGGER_DAILY, TASK_TRIGGER_EVENT, TASK_TRIGGER_IDLE, TASK_TRIGGER_LOGON,
     TASK_TRIGGER_MONTHLY, TASK_TRIGGER_MONTHLYDOW, TASK_TRIGGER_REGISTRATION, TASK_TRIGGER_TIME,
     TASK_TRIGGER_WEEKLY,
@@ -65,12 +68,12 @@ impl ScheduleBuilder<Base> {
     /// let com = ComRuntime::new()?;
     /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new(&com).unwrap();
     /// ```
-    pub fn new(com: &ComRuntime, task_service: &ITaskService) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(com_runtime: &ComRuntime, task_service: &ITaskService) -> Result<Self, Box<dyn std::error::Error>> {
         unsafe {
-            let sb_com = com.clone();
+            let sb_com_rt = com_runtime.clone();
             let sb_ts = task_service.clone();
 
-            let sch_com = com.clone();
+            let sch_com_rt = com_runtime.clone();
 
             // let task_service: ITaskService = CoCreateInstance(&TaskScheduler, None, CLSCTX_ALL)?;
             // task_service.Connect(
@@ -88,7 +91,7 @@ impl ScheduleBuilder<Base> {
             let settings: ITaskSettings = task_definition.Settings()?;
 
             Ok(Self {
-                com_runtime: sb_com,
+                com_runtime: sb_com_rt,
                 frequency: std::marker::PhantomData::<Base>,
                 task_service: sb_ts,
                 schedule: Schedule {
@@ -102,7 +105,7 @@ impl ScheduleBuilder<Base> {
                     task_definition,
                     trigger: None,
                     triggers,
-                    com_runtime: sch_com
+                    com_runtime: sch_com_rt
                 },
             })
         }
