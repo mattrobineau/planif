@@ -3,14 +3,13 @@ use crate::{
     error::{InvalidOperationError, RequiredPropertyError},
     schedule::{Schedule, Unregistered},
     settings::{Duration, PrincipalSettings, Settings}, task_scheduler::ComRuntime,
+    com::ComRuntime,
 };
-use std::rc::Rc;
-use windows::core::ComInterface;
-use windows::core::BSTR;
-use windows::Win32::Foundation::VARIANT_BOOL;
 use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED, VARIANT,
+    CoCreateInstance, CLSCTX_ALL, VARIANT,
 };
+use windows::core::{BSTR, ComInterface};
+use windows::Win32::Foundation::VARIANT_BOOL;
 use windows::Win32::System::TaskScheduler::{
     IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IExecAction,
     IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, INetworkSettings, IPrincipal,
@@ -60,7 +59,8 @@ impl ScheduleBuilder<Base> {
     /// Create a new base builder.
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ Base, ComRuntime, ScheduleBuilder };
+    /// use planif::schedule_builder::{ Base, ScheduleBuilder };
+    /// use planif::com::ComRuntime;
     ///
     /// let com = ComRuntime::new()?;
     /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new(&com).unwrap();
