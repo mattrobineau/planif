@@ -48,20 +48,22 @@ pub mod schedule;
 pub mod schedule_builder;
 /// Various settings available while building [Schedules](schedule::Schedule).
 pub mod settings;
+/// The base struct used to manage all the others.
+pub mod task_scheduler;
 /// Com
 pub mod com;
 
 #[cfg(test)]
 mod tests {
+    use chrono::{Duration, Local};
+
+    use crate::{task_scheduler::{TaskScheduler}, enums::TaskCreationFlags, schedule_builder::Action};
 
     #[test]
     fn it_works() -> Result<(), Box<dyn std::error::Error>> {
-        use crate::enums::TaskCreationFlags;
-        use crate::schedule_builder::{Action, ScheduleBuilder};
-        use chrono::prelude::*;
-        use chrono::Duration;
-
-        ScheduleBuilder::new()?
+        let ts = TaskScheduler::new();
+        ts
+            .create_schedule()
             .create_time()
             .author("Test dummy")?
             .description("Test Time Trigger")?
@@ -76,6 +78,13 @@ mod tests {
             )?
             .build()?
             .register("TimeTaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
+
+        println!("{}", ts.get_schedule("\\Test folder\\TimeTaskName").path());
+
+        // ts.get_schedules_from_folder("Mozilla")
+        //     .unwrap()
+        //     .into_iter()
+        //     .for_each(|x| println!("{}", x.path()));
 
         Ok(())
     }
