@@ -48,6 +48,8 @@ pub mod schedule;
 pub mod schedule_builder;
 /// Various settings available while building [Schedules](schedule::Schedule).
 pub mod settings;
+/// Com
+pub mod com;
 
 #[cfg(test)]
 mod tests {

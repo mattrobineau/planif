@@ -1,9 +1,11 @@
 use windows::core::BSTR;
-use windows::Win32::System::Com::VARIANT;
 use windows::Win32::System::TaskScheduler::{
     IActionCollection, IRegistrationInfo, ITaskDefinition, ITaskFolder, ITaskService,
     ITaskSettings, ITrigger, ITriggerCollection, TASK_LOGON_INTERACTIVE_TOKEN,
 };
+use windows::Win32::System::Com::VARIANT;
+
+use crate::com::ComRuntime;
 
 #[derive(Debug, PartialEq)]
 /// A schedule is created by a [schedule builder](crate::schedule_builder). Once created, the
@@ -38,5 +40,39 @@ impl Schedule {
         }
 
         Ok(())
+    }
+}
+
+/// TaskScheduler represents the actions you can take for using the Windows Task Scheduler.
+/// For example: Creating new schedules, fetching the COM, etc.
+pub struct TaskScheduler {
+    com: ComRuntime
+}
+
+impl TaskScheduler {
+    /// Create's a new TaskScheduler
+    /// # Example
+    /// ```
+    /// use planif::schedule::TaskScheduler;
+    ///
+    /// let ts = TaskScheduler::new().unwrap();
+    /// ```
+    ///
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            com: ComRuntime::new()?
+        })
+    }
+
+    /// Returns the TaskScheduler's com runtime
+    /// # Example
+    /// ```
+    /// use planif::schedule::TaskScheduler;
+    /// 
+    /// let ts = TaskScheduler::new().unwrap();
+    /// let com = ts.get_com();
+    /// ```
+    pub fn get_com(&self) -> ComRuntime {
+        self.com.clone()
     }
 }

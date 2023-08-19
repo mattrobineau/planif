@@ -3,14 +3,13 @@ use crate::{
     error::{InvalidOperationError, RequiredPropertyError},
     schedule::Schedule,
     settings::{Duration, PrincipalSettings, Settings},
+    com::ComRuntime,
 };
-use std::rc::Rc;
-use windows::core::ComInterface;
-use windows::core::BSTR;
-use windows::Win32::Foundation::VARIANT_BOOL;
 use windows::Win32::System::Com::{
-    CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_ALL, COINIT_MULTITHREADED, VARIANT,
+    CoCreateInstance, CLSCTX_ALL, VARIANT,
 };
+use windows::core::{BSTR, ComInterface};
+use windows::Win32::Foundation::VARIANT_BOOL;
 use windows::Win32::System::TaskScheduler::{
     IAction, IActionCollection, IBootTrigger, IDailyTrigger, IEventTrigger, IExecAction,
     IIdleTrigger, ILogonTrigger, IMonthlyDOWTrigger, IMonthlyTrigger, INetworkSettings, IPrincipal,
@@ -48,37 +47,6 @@ pub struct Time {}
 /// [`ScheduleBuilder<Weekly>`](ScheduleBuilder#impl-ScheduleBuilder<Weekly>)
 pub struct Weekly {}
 
-/// Represents a COM runtime required for building schedules tasks
-#[derive(Clone)]
-pub struct ComRuntime(Rc<Com>);
-
-impl ComRuntime {
-    /// Creates a COM runtime for use with one or more
-    /// [ScheduleBuilder]
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(ComRuntime(Rc::new(Com::initialize()?)))
-    }
-}
-
-struct Com;
-
-impl Com {
-    fn initialize() -> Result<Self, Box<dyn std::error::Error>> {
-        unsafe {
-            CoInitializeEx(None, COINIT_MULTITHREADED)?;
-        }
-        Ok(Com)
-    }
-}
-
-impl Drop for Com {
-    fn drop(&mut self) {
-        unsafe {
-            CoUninitialize();
-        }
-    }
-}
-
 /// A generic schedule builder used to create a specific builder.
 pub struct ScheduleBuilder<Frequency = Base> {
     pub(crate) frequency: std::marker::PhantomData<Frequency>,
@@ -90,7 +58,8 @@ impl ScheduleBuilder<Base> {
     /// Create a new base builder.
     /// # Example
     /// ```
-    /// use planif::schedule_builder::{ Base, ComRuntime, ScheduleBuilder };
+    /// use planif::schedule_builder::{ Base, ScheduleBuilder };
+    /// use planif::com::ComRuntime;
     ///
     /// let com = ComRuntime::new()?;
     /// let builder: ScheduleBuilder<Base> = ScheduleBuilder::new(&com).unwrap();
