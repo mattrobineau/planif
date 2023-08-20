@@ -1,10 +1,13 @@
 use chrono::prelude::*;
 use planif::enums::{ DayOfWeek, TaskCreationFlags };
-use planif::schedule_builder::{Action, ComRuntime, ScheduleBuilder};
+use planif::schedule::TaskScheduler;
+use planif::schedule_builder::{Action, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let com = ComRuntime::new()?;
+    let ts = TaskScheduler::new()?;
+    let com = ts.get_com();
     let sb = ScheduleBuilder::new(&com).unwrap();
+
     sb.create_weekly()
         .author("Matt")?
         .description("Test Weekly Trigger")?

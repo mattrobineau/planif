@@ -1,9 +1,12 @@
 use chrono::prelude::*;
 use planif::enums::{DayOfMonth, Month, TaskCreationFlags};
-use planif::schedule_builder::{Action, ComRuntime, Monthly, ScheduleBuilder};
+use planif::schedule::TaskScheduler;
+use planif::schedule_builder::{Action, Monthly, ScheduleBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let com = ComRuntime::new()?;
+    let ts = TaskScheduler::new()?;
+    let com = ts.get_com();
+
     let builder: ScheduleBuilder<Monthly> = ScheduleBuilder::new(&com)?
         .create_monthly()
         .author("Matt")?
