@@ -28,7 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       dropping the com
 * Moved `ComRuntime` to `planif::com` module
 
+
 ## [0.2.1]
+
 ### Updated
 * Update documentation, add deny missing_docs
 
