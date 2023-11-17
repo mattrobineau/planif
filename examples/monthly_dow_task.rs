@@ -1,9 +1,13 @@
 use chrono::prelude::*;
 use planif::enums::{DayOfWeek, Month, TaskCreationFlags, WeekOfMonth};
 use planif::schedule_builder::{Action, MonthlyDOW, ScheduleBuilder};
+use planif::schedule::TaskScheduler;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new()?
+    let ts = TaskScheduler::new()?;
+    let com = ts.get_com();
+
+    let builder: ScheduleBuilder<MonthlyDOW> = ScheduleBuilder::new(&com)?
         .create_monthly_dow()
         .author("Matt")?
         .description("Test Trigger")?

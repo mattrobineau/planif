@@ -1,9 +1,12 @@
 use chrono::{Duration, Local};
 use planif::enums::TaskCreationFlags;
 use planif::schedule_builder::{Action, ScheduleBuilder};
+use planif::schedule::TaskScheduler;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sb = ScheduleBuilder::new().unwrap();
+    let ts = TaskScheduler::new()?;
+    let com = ts.get_com();
+    let sb = ScheduleBuilder::new(&com).unwrap();
 
     sb.create_time()
         .author("Matt")?
