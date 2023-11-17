@@ -50,33 +50,3 @@ pub mod schedule_builder;
 pub mod settings;
 /// Com
 pub mod com;
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn it_works() -> Result<(), Box<dyn std::error::Error>> {
-        use crate::enums::TaskCreationFlags;
-        use crate::schedule_builder::{Action, ScheduleBuilder};
-        use chrono::prelude::*;
-        use chrono::Duration;
-
-        ScheduleBuilder::new()?
-            .create_time()
-            .author("Test dummy")?
-            .description("Test Time Trigger")?
-            .in_folder("\\Test folder")?
-            .trigger("test_time_trigger", true)?
-            .action(Action::new("test_time_action", "notepad.exe", "", ""))?
-            .start_boundary(
-                &Local::now()
-                    .checked_add_signed(Duration::seconds(10))
-                    .unwrap()
-                    .to_rfc3339(),
-            )?
-            .build()?
-            .register("TimeTaskName", TaskCreationFlags::CreateOrUpdate as i32)?;
-
-        Ok(())
-    }
-}

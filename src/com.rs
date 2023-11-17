@@ -9,7 +9,7 @@ pub struct ComRuntime(Rc<Com>);
 
 impl ComRuntime {
     /// Creates a COM runtime for use with one or more
-    /// [ScheduleBuilder]
+    /// [`ScheduleBuilder`](super::schedule_builder::ScheduleBuilder)
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         Ok(ComRuntime(Rc::new(Com::initialize()?)))
     }

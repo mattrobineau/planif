@@ -113,7 +113,7 @@ pub enum LogonType {
     ServiceAccount,
     /// First use the interactive token. If the user is not logged on (no interactive token is available), then the password
     /// is used. The password must be specified when a task is registered. This flag is not recommended for new tasks because
-    /// it is less reliable than [LogonType::Password](LogonType::Password).
+    /// it is less reliable than [LogonType::Password].
     InteractiveTokenOrPassword,
 }
 
@@ -313,6 +313,9 @@ impl fmt::Display for Duration {
             format_duration!(s, self.hours, "H");
             format_duration!(s, self.minutes, "M");
             format_duration!(s, self.seconds, "S");
+        }
+        if s.is_empty() {
+            return write!(f, "")
         }
 
         write!(f, "P{}", s)
