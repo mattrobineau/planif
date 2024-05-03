@@ -308,7 +308,7 @@ impl fmt::Display for Duration {
         format_duration!(s, self.months, "M");
         format_duration!(s, self.days, "D");
 
-        if self.hours.is_some() || self.minutes.is_some() || self.hours.is_some() {
+        if self.hours.is_some() || self.minutes.is_some() || self.seconds.is_some() {
             s = format!("{}T", s);
             format_duration!(s, self.hours, "H");
             format_duration!(s, self.minutes, "M");
@@ -357,10 +357,14 @@ mod tests {
     #[test]
     fn duration_time_only() {
         let mut d = Duration::new();
-        d.hours = Some(1);
-        d.minutes = Some(2);
-        d.seconds = Some(3);
 
+        d.seconds = Some(3);
+        assert_eq!("PT3S", d.to_string());
+
+        d.minutes = Some(2);
+        assert_eq!("PT2M3S", d.to_string());
+
+        d.hours = Some(1);
         assert_eq!("PT1H2M3S", d.to_string());
     }
     
